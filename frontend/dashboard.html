@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard — Faculty Hub</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root, [data-theme="dark"] {
+            --navy:    #0B1120;
+            --slate:   #141C2E;
+            --panel:   #1A2440;
+            --panel2:  #1E2C50;
+            --border:  rgba(255,255,255,0.07);
+            --rule:    rgba(255,255,255,0.04);
+            --ink:     #4C5FD5;
+            --ink-lt:  #7B8EE8;
+            --stamp:   #E8A020;
+            --stamp-bg:rgba(232,160,32,0.1);
+            --text:    #D8DCEB;
+            --muted:   #6B7694;
+            --dim:     #3A4460;
+            --green:   #10b981;
+            --red:     #ef4444;
+            --heading: #EEF0F4;
+        }
+        [data-theme="light"] {
+            --navy:    #F0F3FA;
+            --slate:   #FFFFFF;
+            --panel:   #E8EBF5;
+            --panel2:  #DDE3F2;
+            --border:  rgba(0,0,0,0.09);
+            --rule:    rgba(0,0,0,0.05);
+            --ink:     #4C5FD5;
+            --ink-lt:  #4C5FD5;
+            --stamp:   #C07A00;
+            --stamp-bg:rgba(192,122,0,0.09);
+            --text:    #1E2A4A;
+            --muted:   #5A6480;
+            --dim:     #94A0C0;
+            --green:   #059669;
+            --red:     #DC2626;
+            --heading: #1A2240;
+        }
+
+        body {
+            background: var(--navy);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+        }
+
+        /* dot grid */
+        body::before {
+            content: '';
+            position: fixed; inset: 0;
+            background-image: radial-gradient(circle, rgba(76,95,213,0.09) 1px, transparent 1px);
+            background-size: 28px 28px;
+            pointer-events: none; z-index: 0;
+        }
+
+        /* === NAVBAR === */
+        .navbar-dash {
+            position: sticky; top: 0; z-index: 100;
+            background: rgba(11,17,32,0.94);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .nav-inner {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 13px 24px;
+            display: flex; align-items: center;
+            justify-content: space-between; gap: 16px;
+        }
+
+        .nav-left { display: flex; align-items: center; gap: 14px; }
+
+        .brand-ico {
+            width: 36px; height: 36px;
+            background: var(--panel);
+            border: 1px solid rgba(76,95,213,0.35);
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--ink-lt); font-size: 0.9rem;
+        }
+
+        .brand-name {
+            font-family: 'DM Serif Display', serif;
+            font-size: 1.25rem;
+            color: #EEF0F4; font-weight: 400;
+        }
+
+        .admin-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.62rem;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--stamp);
+            background: var(--stamp-bg);
+            border: 1px solid rgba(232,160,32,0.28);
+            border-radius: 5px;
+            padding: 4px 10px;
+        }
+
+        .nav-right { display: flex; align-items: center; gap: 12px; }
+
+        .nav-user {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.72rem;
+            color: var(--muted);
+            letter-spacing: 0.3px;
+        }
+
+        .nav-link-plain {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--ink-lt);
+            text-decoration: none;
+            transition: color 0.2s;
+            padding: 6px 10px;
+            border-radius: 6px;
+        }
+        .nav-link-plain:hover {
+            background: rgba(76,95,213,0.1);
+            color: #EEF0F4;
+        }
+
+        .btn-logout {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #FCA5A5;
+            background: rgba(220,38,38,0.1);
+            border: 1px solid rgba(220,38,38,0.22);
+            border-radius: 7px;
+            padding: 7px 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-logout:hover { background: rgba(220,38,38,0.2); }
+
+        /* === PAGE CONTENT === */
+        .page-content {
+            position: relative; z-index: 10;
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 28px 24px 60px;
+        }
+
+        /* === STAT CARDS === */
+        .stat-strip {
+            display: flex; gap: 16px; margin-bottom: 28px;
+            flex-wrap: wrap;
+        }
+
+        .stat-card {
+            background: var(--slate);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 18px 22px;
+            display: flex; align-items: center; gap: 16px;
+            min-width: 200px;
+            transition: border-color 0.2s;
+        }
+        .stat-card:hover { border-color: rgba(76,95,213,0.35); }
+
+        .stat-ico {
+            width: 42px; height: 42px;
+            background: rgba(76,95,213,0.13);
+            border: 1px solid rgba(76,95,213,0.25);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem; color: var(--ink-lt);
+            flex-shrink: 0;
+        }
+        .stat-num {
+            font-family: 'DM Serif Display', serif;
+            font-size: 2rem;
+            color: #EEF0F4;
+            line-height: 1;
+        }
+        .stat-lbl {
+            font-size: 0.72rem;
+            color: var(--muted);
+            margin-top: 3px;
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        /* === MAIN LEDGER CARD === */
+        .ledger-card {
+            background: var(--slate);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+
+        .ledger-head {
+            background: var(--panel);
+            border-bottom: 1px solid var(--border);
+            padding: 18px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .ledger-title {
+            font-family: 'DM Serif Display', serif;
+            font-size: 1.3rem;
+            color: #EEF0F4;
+            font-weight: 400;
+        }
+        .ledger-sub {
+            font-size: 0.75rem;
+            color: var(--muted);
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: 0.3px;
+            margin-top: 3px;
+        }
+
+        .ledger-controls {
+            display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+        }
+
+        .search-wrap { position: relative; }
+        .search-ico {
+            position: absolute;
+            left: 12px; top: 50%;
+            transform: translateY(-50%);
+            color: var(--dim); font-size: 0.78rem;
+            pointer-events: none;
+        }
+        .search-dark {
+            background: var(--navy);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+            padding: 9px 14px 9px 34px;
+            outline: none;
+            width: 240px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .search-dark:focus {
+            border-color: var(--ink);
+            box-shadow: 0 0 0 3px rgba(76,95,213,0.13);
+        }
+        .search-dark::placeholder { color: var(--dim); }
+
+        .btn-excel {
+            background: rgba(16,185,129,0.12);
+            border: 1px solid rgba(16,185,129,0.28);
+            color: #6EE7B7;
+            border-radius: 8px;
+            padding: 9px 16px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            font-family: 'Inter', sans-serif;
+        }
+        .btn-excel:hover { background: rgba(16,185,129,0.22); }
+        .btn-excel:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        /* === TABLE (LEDGER) === */
+        .table-scroll { overflow-x: auto; }
+
+        .dark-table { width: 100%; border-collapse: collapse; }
+
+        .dark-table thead tr {
+            background: var(--navy);
+            border-bottom: 2px solid rgba(76,95,213,0.2);
+        }
+
+        .dark-table thead th {
+            padding: 12px 16px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: var(--muted);
+            white-space: nowrap;
+        }
+
+        /* ledger-style rows */
+        .dark-table tbody tr {
+            border-bottom: 1px solid var(--rule);
+            transition: background 0.15s;
+        }
+        .dark-table tbody tr:hover { background: rgba(76,95,213,0.06); }
+        .dark-table tbody tr:last-child { border-bottom: none; }
+
+        .dark-table tbody td {
+            padding: 13px 16px;
+            font-size: 0.86rem;
+            vertical-align: middle;
+        }
+
+        /* row number — ledger entry style */
+        .row-num {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.72rem;
+            color: var(--dim);
+        }
+
+        .avatar-sm {
+            width: 36px; height: 36px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 1px solid rgba(76,95,213,0.25);
+        }
+
+        .name-cell strong {
+            font-weight: 600;
+            color: #EEF0F4;
+            font-size: 0.88rem;
+        }
+
+        .mono-cell {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem;
+            color: var(--muted);
+        }
+
+        .qual-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.68rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            background: rgba(76,95,213,0.13);
+            border: 1px solid rgba(76,95,213,0.28);
+            color: var(--ink-lt);
+            border-radius: 5px;
+            padding: 3px 9px;
+        }
+
+        /* action buttons */
+        .act-wrap { display: flex; gap: 6px; }
+        .btn-act {
+            width: 30px; height: 30px;
+            border-radius: 6px;
+            border: 1px solid transparent;
+            display: inline-flex; align-items: center; justify-content: center;
+            font-size: 0.78rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-view { background: rgba(76,95,213,0.12); border-color: rgba(76,95,213,0.22); color: var(--ink-lt); }
+        .btn-view:hover { background: rgba(76,95,213,0.25); }
+        .btn-edit { background: rgba(232,160,32,0.12); border-color: rgba(232,160,32,0.22); color: var(--stamp); }
+        .btn-edit:hover { background: rgba(232,160,32,0.25); }
+        .btn-del { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.2); color: #FCA5A5; }
+        .btn-del:hover { background: rgba(239,68,68,0.22); }
+
+        /* empty state */
+        .empty-state {
+            text-align: center; padding: 56px 20px;
+            color: var(--dim); font-size: 0.88rem;
+        }
+        .empty-state i { font-size: 2.5rem; margin-bottom: 12px; display: block; }
+
+        /* toast */
+        .alert-toast {
+            position: fixed; top: 72px; right: 20px;
+            z-index: 9999; min-width: 300px;
+            border-radius: 10px; padding: 14px 18px;
+            font-size: 0.88rem; font-weight: 600;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(120%); opacity: 0; }
+            to   { transform: translateX(0); opacity: 1; }
+        }
+
+        /* === MODALS === */
+        .modal-dark .modal-content {
+            background: var(--slate);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            color: var(--text);
+        }
+        .modal-dark .modal-header {
+            background: var(--panel);
+            border-bottom: 1px solid var(--border);
+            border-radius: 16px 16px 0 0;
+            padding: 18px 24px;
+        }
+        .modal-dark .modal-footer {
+            background: var(--navy);
+            border-top: 1px solid var(--border);
+            border-radius: 0 0 16px 16px;
+            padding: 14px 24px;
+        }
+        .modal-dark .modal-body {
+            padding: 24px;
+            max-height: 68vh;
+            overflow-y: auto;
+            background-image: repeating-linear-gradient(
+                to bottom, transparent, transparent 47px,
+                var(--rule) 47px, var(--rule) 48px
+            );
+        }
+        .modal-dark .modal-body::-webkit-scrollbar { width: 4px; }
+        .modal-dark .modal-body::-webkit-scrollbar-thumb {
+            background: var(--dim); border-radius: 10px;
+        }
+
+        /* modal section labels */
+        .m-sec {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.62rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--ink-lt);
+            margin: 20px 0 10px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .m-sec::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(76,95,213,0.2);
+        }
+        .m-sec:first-child { margin-top: 0; }
+
+        /* detail view rows */
+        .detail-row {
+            display: flex;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .detail-row:last-child { border-bottom: none; }
+        .detail-key {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--muted);
+            width: 150px;
+            flex-shrink: 0;
+            font-family: 'JetBrains Mono', monospace;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .detail-val {
+            font-size: 0.85rem;
+            color: var(--text);
+            word-break: break-all;
+        }
+
+        /* edit form */
+        .e-label {
+            display: block;
+            font-size: 0.68rem; font-weight: 700;
+            letter-spacing: 0.8px; text-transform: uppercase;
+            color: var(--muted); margin-bottom: 6px;
+        }
+        .e-input {
+            width: 100%;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+            padding: 9px 12px;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .e-input:focus {
+            border-color: var(--ink);
+            box-shadow: 0 0 0 3px rgba(76,95,213,0.13);
+        }
+        .e-input::placeholder { color: var(--dim); }
+        .e-input option { background: var(--panel); }
+        .e-input.is-valid  { border-color: var(--green) !important; }
+        .e-input.is-invalid { border-color: var(--red) !important; }
+        .e-err { font-size: 0.72rem; color: #FCA5A5; margin-top: 4px; display: none; }
+
+        /* modal buttons */
+        .btn-save {
+            background: var(--ink);
+            border: none; border-radius: 8px;
+            color: #fff; padding: 10px 22px;
+            font-weight: 700; font-size: 0.88rem;
+            cursor: pointer; transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+        .btn-save:hover { background: #5C6FE5; transform: translateY(-1px); }
+
+        .btn-cancel {
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--muted); padding: 10px 18px;
+            font-weight: 600; font-size: 0.88rem;
+            cursor: pointer; transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+        .btn-cancel:hover { background: var(--panel); color: var(--text); }
+
+        .modal-title-txt {
+            font-family: 'DM Serif Display', serif;
+            font-size: 1.1rem;
+            color: #EEF0F4;
+            font-weight: 400;
+        }
+        .modal-title-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            color: var(--stamp);
+            background: var(--stamp-bg);
+            border: 1px solid rgba(232,160,32,0.25);
+            border-radius: 4px;
+            padding: 3px 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .photo-circle {
+            width: 72px; height: 72px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(76,95,213,0.35);
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar-dash">
+    <div class="nav-inner">
+        <div class="nav-left">
+            <div class="brand-ico"><i class="fa-solid fa-graduation-cap"></i></div>
+            <span class="brand-name">Faculty Hub</span>
+            <span class="admin-badge"><i class="fa-solid fa-shield-halved me-1"></i>ADMIN</span>
+        </div>
+        <div class="nav-right">
+            <span class="nav-user"><i class="fa-solid fa-user me-1"></i><span id="adminName">admin</span></span>
+            <a href="index.html" class="nav-link-plain"><i class="fa-solid fa-file-pen me-1"></i>Registration Form</a>
+            <button id="themeBtn" title="Toggle theme" style="width:34px;height:34px;border-radius:7px;background:var(--panel);border:1px solid var(--border);color:var(--muted);display:inline-flex;align-items:center;justify-content:center;font-size:0.82rem;cursor:pointer;transition:all 0.2s"><i id="themeIcon" class="fa-solid fa-moon"></i></button>
+            <button class="btn-logout" onclick="logout()"><i class="fa-solid fa-right-from-bracket me-1"></i>Logout</button>
+        </div>
+    </div>
+</nav>
+
+<div class="page-content">
+
+    <!-- Stats -->
+    <div class="stat-strip">
+        <div class="stat-card">
+            <div class="stat-ico"><i class="fa-solid fa-users"></i></div>
+            <div>
+                <div class="stat-num" id="statTotal">0</div>
+                <div class="stat-lbl">Total Faculty</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ledger -->
+    <div class="ledger-card">
+        <div class="ledger-head">
+            <div>
+                <div class="ledger-title">Faculty Registry</div>
+                <div class="ledger-sub">ALL REGISTERED MEMBERS · ACADEMIC YEAR 2026</div>
+            </div>
+            <div class="ledger-controls">
+                <div class="search-wrap">
+                    <span class="search-ico"><i class="fa-solid fa-magnifying-glass"></i></span>
+                    <input type="text" class="search-dark" id="searchInput" placeholder="Search name, mobile, ID…">
+                </div>
+                <button class="btn-excel" id="excelBtn">
+                    <i class="fa-solid fa-file-arrow-down me-1"></i>Export Excel
+                </button>
+            </div>
+        </div>
+
+        <div class="table-scroll">
+            <table class="dark-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Photo</th>
+                        <th>Faculty Name</th>
+                        <th>Mobile</th>
+                        <th>College Email</th>
+                        <th>Qualification</th>
+                        <th style="text-align:center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+            <div class="empty-state d-none" id="emptyState">
+                <i class="fa-regular fa-folder-open" style="color:var(--dim)"></i>
+                No faculty records found.
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div class="alert-toast" id="toast"></div>
+
+<!-- VIEW MODAL -->
+<div class="modal fade modal-dark" id="viewModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="modal-title-txt">Faculty Record</span>
+                    <span class="modal-title-badge">VIEW</span>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="viewBody"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="modal fade modal-dark" id="editModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="modal-title-txt">Edit Faculty Record</span>
+                    <span class="modal-title-badge">EDIT</span>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="background-image:none">
+                <input type="hidden" id="editId">
+
+                <div class="m-sec"><i class="fa-solid fa-user me-1"></i>Personal Information</div>
+                <div class="row g-3">
+                    <div class="col-md-6"><label class="e-label">Faculty Name *</label><input type="text" class="e-input" id="eFacultyName" placeholder="Full name"><div class="e-err" id="eFacultyNameErr">Min 3 alphabets required.</div></div>
+                    <div class="col-md-3"><label class="e-label">Mobile Number *</label><input type="text" class="e-input" id="eMobile" placeholder="10 digits" maxlength="10"><div class="e-err" id="eMobileErr">Valid 10-digit number required.</div></div>
+                    <div class="col-md-3"><label class="e-label">Alternate Mobile</label><input type="text" class="e-input" id="eAltMobile" placeholder="Optional" maxlength="10"></div>
+                    <div class="col-md-6"><label class="e-label">College Email *</label><input type="email" class="e-input" id="eCollegeEmail" placeholder="name@college.ac.in"><div class="e-err" id="eCollegeEmailErr">Valid email required.</div></div>
+                    <div class="col-md-6"><label class="e-label">Personal Email *</label><input type="email" class="e-input" id="ePersonalEmail" placeholder="name@gmail.com"><div class="e-err" id="ePersonalEmailErr">Valid email required.</div></div>
+                    <div class="col-md-4"><label class="e-label">Father's Name *</label><input type="text" class="e-input" id="eFatherName" placeholder="Father's name"><div class="e-err" id="eFatherNameErr">Only alphabets allowed.</div></div>
+                    <div class="col-md-4"><label class="e-label">Mother's Name *</label><input type="text" class="e-input" id="eMotherName" placeholder="Mother's name"><div class="e-err" id="eMotherNameErr">Only alphabets allowed.</div></div>
+                    <div class="col-md-2"><label class="e-label">Qualification *</label>
+                        <select class="e-input" id="eQualification">
+                            <option value="">Choose…</option>
+                            <option value="B.Tech">B.Tech</option>
+                            <option value="M.Tech">M.Tech</option>
+                            <option value="Ph.D.">Ph.D.</option>
+                            <option value="MCA">MCA</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2"><label class="e-label">TCS Code</label><input type="text" class="e-input" id="eTcsCode" placeholder="Optional"></div>
+                </div>
+
+                <div class="m-sec"><i class="fa-solid fa-id-card me-1"></i>Identity Documents</div>
+                <div class="row g-3">
+                    <div class="col-md-4"><label class="e-label">Aadhaar Number *</label><input type="text" class="e-input" id="eAadhaar" placeholder="12 digits" maxlength="12"><div class="e-err" id="eAadhaarErr">Exactly 12 digits required.</div></div>
+                    <div class="col-md-4"><label class="e-label">PAN Number</label><input type="text" class="e-input text-uppercase" id="ePan" placeholder="ABCDE1234F (optional)" maxlength="10"></div>
+                    <div class="col-md-4"><label class="e-label">New Aadhaar File <span style="color:var(--muted)">(optional)</span></label><input type="file" class="e-input" id="eAadhaarFile" accept=".pdf,.jpg,.jpeg,.png"></div>
+                    <div class="col-md-4"><label class="e-label">New PAN File <span style="color:var(--muted)">(optional)</span></label><input type="file" class="e-input" id="ePanFile" accept=".pdf,.jpg,.jpeg,.png"></div>
+                    <div class="col-md-4"><label class="e-label">New Passport Photo <span style="color:var(--muted)">(optional)</span></label><input type="file" class="e-input" id="ePhoto" accept=".jpg,.jpeg,.png"></div>
+                </div>
+
+                <div class="m-sec"><i class="fa-solid fa-building-columns me-1"></i>Bank Details</div>
+                <div class="row g-3">
+                    <div class="col-md-6"><label class="e-label">Bank Name *</label><input type="text" class="e-input" id="eBankName" placeholder="e.g. State Bank of India"><div class="e-err" id="eBankNameErr">Bank name required.</div></div>
+                    <div class="col-md-3"><label class="e-label">IFSC Code *</label><input type="text" class="e-input text-uppercase" id="eIfsc" placeholder="SBIN0001234" maxlength="11"><div class="e-err" id="eIfscErr">Valid IFSC required.</div></div>
+                    <div class="col-md-3"></div>
+                    <div class="col-md-6"><label class="e-label">Account Number *</label><input type="text" class="e-input" id="eBankAcc" placeholder="Account number"><div class="e-err" id="eBankAccErr">Account number required.</div></div>
+                    <div class="col-md-6"><label class="e-label">Re-enter Account Number *</label><input type="text" class="e-input" id="eBankAccConfirm" placeholder="Re-enter account number"><div class="e-err" id="eBankAccConfirmErr">Account numbers do not match.</div></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn-save" id="saveEditBtn"><i class="fa-solid fa-floppy-disk me-2"></i>Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- DELETE MODAL -->
+<div class="modal fade modal-dark" id="delModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="modal-title-txt" style="color:#FCA5A5">Confirm Delete</span>
+                    <span class="modal-title-badge" style="color:#FCA5A5;background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.25)">IRREVERSIBLE</span>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="background-image:none;max-height:none">
+                <p style="color:var(--muted);font-size:0.88rem;line-height:1.6">
+                    This will permanently remove the faculty record from the registry. This action cannot be undone.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" id="confirmDelBtn"
+                    style="background:rgba(220,38,38,0.9);border:none;border-radius:8px;color:#fff;padding:10px 20px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;font-size:0.88rem">
+                    <i class="fa-solid fa-trash me-2"></i>Delete Record
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    (function(){
+        const t = localStorage.getItem('fhTheme') || 'dark';
+        document.documentElement.setAttribute('data-theme', t);
+        document.getElementById('themeIcon').className = t === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+        document.getElementById('themeBtn').addEventListener('click', () => {
+            const cur = document.documentElement.getAttribute('data-theme');
+            const nxt = cur === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', nxt);
+            localStorage.setItem('fhTheme', nxt);
+            document.getElementById('themeIcon').className = nxt === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+        });
+    })();
+</script>
+<script src="dashboard.js"></script>
+</body>
+</html>

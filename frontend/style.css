@@ -1,0 +1,197 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+    --primary-gradient: linear-gradient(135deg, #4f46e5, #3b82f6);
+    --valid-color: #10b981;
+    --invalid-color: #ef4444;
+    --section-label-color: #4f46e5;
+}
+
+body {
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ---- Passport Photo Uploader ---- */
+.passport-photo-wrapper {
+    position: relative;
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 3px solid #4f46e5;
+    box-shadow: 0 4px 16px rgba(79,70,229,0.18);
+    cursor: pointer;
+    transition: box-shadow 0.2s;
+}
+
+.passport-photo-wrapper:hover {
+    box-shadow: 0 6px 24px rgba(79,70,229,0.32);
+}
+
+.passport-photo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    border-radius: 50%;
+    transition: filter 0.2s;
+}
+
+.passport-photo-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 36px;
+    background: rgba(79,70,229,0.82);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.passport-photo-wrapper:hover .passport-photo-overlay {
+    opacity: 1;
+}
+
+/* ---- Section Labels ---- */
+.section-label {
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: var(--section-label-color);
+    margin-bottom: 0.5rem;
+    border-left: 3px solid #4f46e5;
+    padding-left: 8px;
+}
+
+/* ---- Card & Layout ---- */
+.bg-gradient {
+    background: var(--primary-gradient) !important;
+}
+
+.card-rounded {
+    border-radius: 16px !important;
+}
+.card-top-rounded {
+    border-top-left-radius: 16px !important;
+    border-top-right-radius: 16px !important;
+}
+.card-bottom-rounded {
+    border-bottom-left-radius: 16px !important;
+    border-bottom-right-radius: 16px !important;
+}
+
+.font-bold { font-weight: 700; }
+.font-semibold { font-weight: 600; }
+.font-medium { font-weight: 500; font-size: 0.92rem; }
+
+.search-box-width {
+    min-width: 220px;
+}
+.border-radius-left {
+    border-top-left-radius: 50px !important;
+    border-bottom-left-radius: 50px !important;
+}
+.border-radius-right {
+    border-top-right-radius: 50px !important;
+    border-bottom-right-radius: 50px !important;
+}
+
+/* ---- Inputs ---- */
+.custom-input:focus {
+    box-shadow: none !important;
+    border-color: #3b82f6 !important;
+}
+
+.custom-input.is-valid, .custom-file-input.is-valid {
+    border-color: var(--valid-color) !important;
+    background-image: none !important;
+    box-shadow: 0 0 4px rgba(16, 185, 129, 0.2) !important;
+}
+
+.custom-input.is-invalid, .custom-file-input.is-invalid {
+    border-color: var(--invalid-color) !important;
+    background-image: none !important;
+    box-shadow: 0 0 4px rgba(239, 68, 68, 0.2) !important;
+}
+
+.feedback-msg {
+    font-size: 0.78rem;
+    margin-top: 4px;
+    margin-left: 10px;
+    font-weight: 500;
+}
+
+.custom-file-input {
+    border-radius: 12px !important;
+    font-size: 0.88rem;
+}
+
+/* ---- Table ---- */
+.table-height-container {
+    max-height: 520px;
+    overflow-y: auto;
+    border: 1px solid #eef2f6;
+    border-radius: 12px;
+}
+
+.custom-table thead th {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background-color: #f8fafc;
+    color: #64748b;
+    padding: 14px;
+}
+
+.custom-table tbody td {
+    padding: 14px;
+    font-size: 0.92rem;
+    color: #334155;
+}
+
+.table-hover tbody tr:hover {
+    background-color: #f1f5f9 !important;
+    transition: background-color 0.2s ease-in-out;
+}
+
+/* ---- Download Button ---- */
+#downloadExcelBtn {
+    background: linear-gradient(135deg, #16a34a, #15803d);
+    border: none;
+    color: #fff;
+    font-size: 0.88rem;
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+
+#downloadExcelBtn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(22,163,74,0.35);
+}
+
+#downloadExcelBtn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* ---- Animations ---- */
+.animate-fade-in {
+    animation: fadeIn 0.4s ease-out forwards;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+footer {
+    margin-top: auto;
+}

@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faculty Registration — Faculty Hub</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root, [data-theme="dark"] {
+            --navy:    #0B1120;
+            --slate:   #141C2E;
+            --panel:   #1A2440;
+            --panel2:  #1E2C50;
+            --border:  rgba(255,255,255,0.07);
+            --rule:    rgba(255,255,255,0.045);
+            --ink:     #4C5FD5;
+            --ink-lt:  #7B8EE8;
+            --stamp:   #E8A020;
+            --stamp-bg:rgba(232,160,32,0.1);
+            --text:    #D8DCEB;
+            --muted:   #6B7694;
+            --dim:     #3A4460;
+            --green:   #10b981;
+            --red:     #ef4444;
+            --heading: #EEF0F4;
+            --dot-clr: rgba(76,95,213,0.10);
+        }
+        [data-theme="light"] {
+            --navy:    #F0F3FA;
+            --slate:   #FFFFFF;
+            --panel:   #E8EBF5;
+            --panel2:  #DDE3F2;
+            --border:  rgba(0,0,0,0.09);
+            --rule:    rgba(0,0,0,0.05);
+            --ink:     #4C5FD5;
+            --ink-lt:  #4C5FD5;
+            --stamp:   #C07A00;
+            --stamp-bg:rgba(192,122,0,0.09);
+            --text:    #1E2A4A;
+            --muted:   #5A6480;
+            --dim:     #94A0C0;
+            --green:   #059669;
+            --red:     #DC2626;
+            --heading: #1A2240;
+            --dot-clr: rgba(76,95,213,0.06);
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            background: var(--navy);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* dot grid */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: radial-gradient(circle, rgba(76,95,213,0.1) 1px, transparent 1px);
+            background-size: 28px 28px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* === NAVBAR === */
+        .top-nav {
+            position: sticky; top: 0; z-index: 100;
+            background: rgba(11,17,32,0.92);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border);
+            padding: 13px 0;
+        }
+
+        .nav-inner {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .brand {
+            display: flex; align-items: center; gap: 10px;
+            text-decoration: none;
+        }
+        .brand-ico {
+            width: 36px; height: 36px;
+            background: var(--panel);
+            border: 1px solid rgba(76,95,213,0.35);
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--ink-lt);
+            font-size: 0.9rem;
+        }
+        .brand-name {
+            font-family: 'DM Serif Display', serif;
+            font-size: 1.25rem;
+            color: #EEF0F4;
+            font-weight: 400;
+        }
+
+        .admin-link {
+            font-size: 0.78rem;
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: 0.5px;
+            color: var(--stamp);
+            background: var(--stamp-bg);
+            border: 1px solid rgba(232,160,32,0.25);
+            border-radius: 6px;
+            padding: 7px 14px;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .admin-link:hover {
+            background: rgba(232,160,32,0.18);
+            color: var(--stamp);
+        }
+
+        /* toast */
+        .toast-box {
+            position: fixed; top: 72px; right: 20px;
+            z-index: 9999; min-width: 300px;
+            border-radius: 10px; padding: 14px 18px;
+            font-size: 0.88rem; font-weight: 600;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(120%); opacity: 0; }
+            to   { transform: translateX(0); opacity: 1; }
+        }
+
+        /* === MAIN === */
+        main {
+            flex: 1;
+            position: relative; z-index: 10;
+            padding: 36px 16px 60px;
+        }
+
+        .form-card {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--slate);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 28px 70px rgba(0,0,0,0.5);
+        }
+
+        /* form header — document-stamp style */
+        .form-header {
+            background: var(--panel);
+            border-bottom: 1px solid var(--border);
+            padding: 28px 32px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 20px;
+            /* dot grid overlay */
+            background-image:
+                radial-gradient(circle, rgba(76,95,213,0.15) 1px, transparent 1px),
+                linear-gradient(var(--panel), var(--panel));
+            background-size: 20px 20px, auto;
+        }
+
+        .header-left h1 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 1.65rem;
+            color: #EEF0F4;
+            font-weight: 400;
+            line-height: 1.1;
+            margin-bottom: 6px;
+        }
+        .header-left p {
+            color: var(--muted);
+            font-size: 0.82rem;
+        }
+
+        .doc-stamp {
+            flex-shrink: 0;
+            border: 2px solid rgba(232,160,32,0.45);
+            border-radius: 8px;
+            padding: 10px 14px;
+            text-align: center;
+            color: var(--stamp);
+            min-width: 100px;
+        }
+        .doc-stamp .stamp-year {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.2rem;
+            font-weight: 600;
+            line-height: 1;
+        }
+        .doc-stamp .stamp-label {
+            font-size: 0.6rem;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-top: 4px;
+            opacity: 0.7;
+        }
+
+        /* form body with ruled lines */
+        .form-body {
+            padding: 28px 32px 32px;
+            background-image: repeating-linear-gradient(
+                to bottom,
+                transparent,
+                transparent 47px,
+                var(--rule) 47px,
+                var(--rule) 48px
+            );
+        }
+
+        /* === SECTION LABELS === */
+        .sec-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.68rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--ink-lt);
+            margin: 24px 0 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(76,95,213,0.2);
+        }
+        .sec-label:first-child { margin-top: 4px; }
+
+        .sec-num {
+            width: 22px; height: 22px;
+            background: rgba(76,95,213,0.18);
+            border: 1px solid rgba(76,95,213,0.35);
+            border-radius: 5px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.68rem;
+            color: var(--ink-lt);
+            flex-shrink: 0;
+        }
+
+        /* === INPUTS === */
+        .f-label {
+            display: block;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+        .f-req { color: rgba(232,160,32,0.7); }
+
+        .f-input {
+            width: 100%;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.88rem;
+            padding: 10px 13px;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+        }
+        .f-input:focus {
+            border-color: var(--ink);
+            background: rgba(76,95,213,0.07);
+            box-shadow: 0 0 0 3px rgba(76,95,213,0.13);
+        }
+        .f-input::placeholder { color: var(--dim); }
+        .f-input option { background: var(--panel); }
+        .f-input.is-valid  { border-color: var(--green) !important; }
+        .f-input.is-invalid { border-color: var(--red) !important; }
+
+        .f-input[type="file"] {
+            color: var(--muted);
+            font-size: 0.82rem;
+            padding: 8px 13px;
+            cursor: pointer;
+        }
+        .f-input[type="file"]::file-selector-button {
+            background: var(--panel2);
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            color: var(--ink-lt);
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 4px 10px;
+            cursor: pointer;
+            margin-right: 10px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .f-err {
+            font-size: 0.73rem;
+            color: #FCA5A5;
+            margin-top: 4px;
+            display: none;
+        }
+
+        /* passport photo */
+        .photo-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            padding: 16px 0 8px;
+        }
+        .passport-wrap {
+            width: 90px; height: 90px;
+            border-radius: 50%;
+            border: 2px solid rgba(76,95,213,0.4);
+            overflow: hidden;
+            cursor: pointer;
+            position: relative;
+            transition: border-color 0.2s;
+        }
+        .passport-wrap:hover { border-color: var(--ink); }
+        .passport-img { width: 100%; height: 100%; object-fit: cover; }
+        .passport-overlay {
+            position: absolute; inset: 0;
+            background: rgba(76,95,213,0.7);
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; font-size: 1rem;
+            opacity: 0; transition: opacity 0.2s;
+        }
+        .passport-wrap:hover .passport-overlay { opacity: 1; }
+        .photo-hint {
+            font-size: 0.72rem;
+            color: var(--muted);
+            text-align: center;
+        }
+
+        /* === BUTTONS === */
+        .btn-submit {
+            width: 100%;
+            padding: 13px;
+            border: none;
+            border-radius: 8px;
+            background: var(--ink);
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.95rem;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 18px rgba(76,95,213,0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-submit::after {
+            content: '';
+            position: absolute; inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.07) 0%, transparent 60%);
+        }
+        .btn-submit:hover:not(:disabled) {
+            background: #5C6FE5;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 24px rgba(76,95,213,0.4);
+        }
+        .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .btn-reset {
+            width: 100%;
+            padding: 11px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: transparent;
+            color: var(--muted);
+            font-weight: 600;
+            font-size: 0.88rem;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 10px;
+        }
+        .btn-reset:hover { background: var(--panel); color: var(--text); }
+
+        /* === FOOTER === */
+        footer {
+            position: relative; z-index: 10;
+            border-top: 1px solid var(--border);
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .footer-copy {
+            color: var(--dim);
+            font-size: 0.75rem;
+        }
+        .footer-mono {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            color: var(--dim);
+            letter-spacing: 0.5px;
+        }
+    </style>
+</head>
+<body>
+
+<nav class="top-nav">
+    <div class="nav-inner">
+        <a href="index.html" class="brand">
+            <div class="brand-ico"><i class="fa-solid fa-graduation-cap"></i></div>
+            <span class="brand-name">Faculty Hub</span>
+        </a>
+        <a href="login.html" class="admin-link"><i class="fa-solid fa-shield-halved me-1"></i>Admin Login</a>
+        <button id="themeBtn" title="Toggle theme" style="width:34px;height:34px;border-radius:7px;background:var(--panel);border:1px solid var(--border);color:var(--muted);display:flex;align-items:center;justify-content:center;font-size:0.82rem;cursor:pointer;transition:all 0.2s;margin-left:6px"><i id="themeIcon" class="fa-solid fa-moon"></i></button>
+    </div>
+</nav>
+
+<div class="toast-box" id="toastBox"></div>
+
+<main>
+    <div class="form-card">
+        <div class="form-header">
+            <div class="header-left">
+                <h1>Faculty Registration</h1>
+                <p>AI &amp; Data Science Department &ensp;·&ensp; Complete all fields marked <span style="color:#E8A020">★</span></p>
+            </div>
+            <div class="doc-stamp">
+                <div class="stamp-year">2026</div>
+                <div class="stamp-label">Academic Year</div>
+            </div>
+        </div>
+
+        <div class="form-body">
+            <form id="registrationForm" enctype="multipart/form-data" novalidate>
+                <input type="hidden" id="facultyId">
+
+                <!-- Photo -->
+                <div class="photo-section">
+                    <div class="passport-wrap" onclick="document.getElementById('passportPhoto').click()">
+                        <img id="photoPreview" src="https://ui-avatars.com/api/?name=Faculty&background=1A2440&color=7B8EE8&size=128" class="passport-img" alt="Photo">
+                        <div class="passport-overlay"><i class="fa-solid fa-camera"></i></div>
+                    </div>
+                    <div class="photo-hint">Click to upload passport photo (JPG/PNG)</div>
+                    <input type="file" id="passportPhoto" class="d-none" accept="image/jpeg,image/jpg,image/png">
+                </div>
+
+                <!-- Personal -->
+                <div class="sec-label">
+                    <div class="sec-num">01</div>
+                    Personal Information
+                </div>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="f-label">Faculty Name <span class="f-req">★</span></label>
+                        <input type="text" class="f-input" id="facultyName" placeholder="Full name as per records">
+                        <div class="f-err" id="facultyNameErr">Minimum 3 alphabets required.</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="f-label">Mobile Number <span class="f-req">★</span></label>
+                        <input type="text" class="f-input" id="mobileNumber" placeholder="10-digit number" maxlength="10">
+                        <div class="f-err" id="mobileErr">Must start with 6–9, exactly 10 digits.</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="f-label">Alternate Mobile</label>
+                        <input type="text" class="f-input" id="alternateMobile" placeholder="Optional" maxlength="10">
+                        <div class="f-err" id="altMobileErr">Must start with 6–9, exactly 10 digits.</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="f-label">College Email <span class="f-req">★</span></label>
+                        <input type="email" class="f-input" id="collegeEmail" placeholder="name@college.ac.in">
+                        <div class="f-err" id="collegeEmailErr">Valid college email required.</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="f-label">Personal Email <span class="f-req">★</span></label>
+                        <input type="email" class="f-input" id="personalEmail" placeholder="name@gmail.com">
+                        <div class="f-err" id="personalEmailErr">Valid personal email required.</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="f-label">Father's Name <span class="f-req">★</span></label>
+                        <input type="text" class="f-input" id="fatherName" placeholder="Father's full name">
+                        <div class="f-err" id="fatherErr">Only alphabets and spaces.</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="f-label">Mother's Name <span class="f-req">★</span></label>
+                        <input type="text" class="f-input" id="motherName" placeholder="Mother's full name">
+                        <div class="f-err" id="motherErr">Only alphabets and spaces.</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="f-label">Qualification <span class="f-req">★</span></label>
+                        <select class="f-input" id="qualification">
+                            <option value="" disabled selected>Select qualification…</option>
+                            <option value="B.Tech">B.Tech</option>
+                            <option value="M.Tech">M.Tech</option>
+                            <option value="Ph.D.">Ph.D.</option>
+                            <option value="MCA">MCA</option>
+                        </select>
+                        <div class="f-err" id="qualErr">Please select a qualification.</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="f-label">TCS Code</label>
+                        <input type="text" class="f-input" id="tcsCode" placeholder="Optional">
+                    </div>
+                </div>
+
+                <!-- Identity -->
+                <div class="sec-label">
+                    <div class="sec-num">02</div>
+                    Identity Documents
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="f-label">Aadhaar Number <span class="f-req">★</span></label>
+                        <input type="text" class="f-input" id="aadhaarNumber" placeholder="12-digit Aadhaar" maxlength="12">
+                        <div class="f-err" id="aadhaarErr">Exactly 12 numeric digits required.</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="f-label">PAN Number</label>
+                        <input type="text" class="f-input text-uppercase" id="panNumber" placeholder="ABCDE1234F (optional)" maxlength="10">
+                        <div class="f-err" id="panErr">Format: ABCDE1234F</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="f-label">Upload Aadhaar <span class="f-req">★</span> <span style="color:var(--muted);font-size:0.65rem">(PDF/JPG/PNG, max 2MB)</span></label>
+                        <input type="file" class="f-input" id="aadhaarFile" accept=".pdf,.jpg,.jpeg,.png">
+                        <div class="f-err" id="aadhaarFileErr">Valid file required (max 2MB).</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="f-label">Upload PAN <span style="color:var(--muted);font-size:0.65rem">(optional, PDF/JPG/PNG)</span></label>
+                        <input type="file" class="f-input" id="panFile" accept=".pdf,.jpg,.jpeg,.png">
+                    </div>
+                </div>
+
+                <!-- Bank -->
+                <div class="sec-label">
+                    <div class="sec-num">03</div>
+                    Bank Details
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="f-label">Bank Name <span class="f-req">★</span></label>
+                        <input type="text" class="f-input" id="bankName" placeholder="e.g. State Bank of India">
+                        <div class="f-err" id="bankNameErr">Bank name is required.</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="f-label">IFSC Code <span class="f-req">★</span></label>
+                        <input type="text" class="f-input text-uppercase" id="ifscCode" placeholder="SBIN0001234" maxlength="11">
+                        <div class="f-err" id="ifscErr">Valid IFSC code required.</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="f-label">Account Number <span class="f-req">★</span></label>
+                        <input type="text" class="f-input" id="bankAccount" placeholder="Bank account number">
+                        <div class="f-err" id="bankAccErr">Account number is required.</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="f-label">Re-enter Account Number <span class="f-req">★</span></label>
+                        <input type="text" class="f-input" id="bankAccountConfirm" placeholder="Confirm account number">
+                        <div class="f-err" id="bankAccConfirmErr">Account numbers do not match.</div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn-submit" id="submitBtn" disabled>
+                        <span class="spinner-border spinner-border-sm d-none me-2" id="loadingSpinner"></span>
+                        <i class="fa-solid fa-paper-plane me-2" id="submitIcon"></i>Submit Registration
+                    </button>
+                    <button type="button" class="btn-reset" id="resetBtn">
+                        <i class="fa-solid fa-rotate-left me-2"></i>Reset Form
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+
+<footer>
+    <span class="footer-copy">© 2026 Faculty Registration Portal · AI &amp; DS Department</span>
+    <span class="footer-mono">FAC-REG-2026 · v2.0</span>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // ── Theme init (runs before script.js) ──
+    (function(){
+        const t = localStorage.getItem('fhTheme') || 'dark';
+        document.documentElement.setAttribute('data-theme', t);
+        document.getElementById('themeIcon').className = t === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+        document.getElementById('themeBtn').addEventListener('click', () => {
+            const cur = document.documentElement.getAttribute('data-theme');
+            const nxt = cur === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', nxt);
+            localStorage.setItem('fhTheme', nxt);
+            document.getElementById('themeIcon').className = nxt === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+        });
+    })();
+</script>
+<script src="script.js"></script>
+</body>
+</html>

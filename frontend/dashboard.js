@@ -1,4 +1,4 @@
-const API = "http://localhost:8000/api/faculty";
+const API = "https://faculty-onlineclass.onrender.com/api/faculty";
 
 // --- Auth Guard ---
 if (sessionStorage.getItem("adminAuth") !== "true") {
@@ -41,7 +41,7 @@ function renderTable(data) {
     empty.classList.add("d-none");
     data.forEach((f, i) => {
         const photoSrc = f.passportPhoto
-            ? `http://localhost:8000/uploads/${f.passportPhoto}`
+            ? `https://faculty-onlineclass.onrender.com/uploads/${f.passportPhoto}`
             : `https://ui-avatars.com/api/?name=${encodeURIComponent(f.facultyName)}&background=6366f1&color=fff&size=80`;
         const tr = document.createElement("tr");
         tr.innerHTML = `
@@ -92,7 +92,7 @@ async function openView(id) {
         if (!result.success) return;
         const d = result.data;
         const photoSrc = d.passportPhoto
-            ? `http://localhost:8000/uploads/${d.passportPhoto}`
+            ? `https://faculty-onlineclass.onrender.com/uploads/${d.passportPhoto}`
             : `https://ui-avatars.com/api/?name=${encodeURIComponent(d.facultyName)}&background=6366f1&color=fff&size=80`;
 
         const rows = [
@@ -117,8 +117,8 @@ async function openView(id) {
         const rowsHtml = rows.map(([k,v]) => `<div class="detail-row"><span class="detail-key">${k}</span><span class="detail-val">${v}</span></div>`).join("");
 
         const links = [
-            d.aadhaarFile ? `<a href="http://localhost:8000/uploads/${d.aadhaarFile}" target="_blank" style="color:#818cf8;font-size:.82rem"><i class="fa-solid fa-file-pdf me-1"></i>Aadhaar Doc</a>` : "",
-            d.panFile ? `<a href="http://localhost:8000/uploads/${d.panFile}" target="_blank" style="color:#818cf8;font-size:.82rem"><i class="fa-solid fa-file-pdf me-1"></i>PAN Doc</a>` : ""
+            d.aadhaarFile ? `<a href="https://faculty-onlineclass.onrender.com/uploads/${d.aadhaarFile}" target="_blank" style="color:#818cf8;font-size:.82rem"><i class="fa-solid fa-file-pdf me-1"></i>Aadhaar Doc</a>` : "",
+            d.panFile ? `<a href="https://faculty-onlineclass.onrender.com/uploads/${d.panFile}" target="_blank" style="color:#818cf8;font-size:.82rem"><i class="fa-solid fa-file-pdf me-1"></i>PAN Doc</a>` : ""
         ].filter(Boolean).join(`<span style="color:#334155;margin:0 8px">|</span>`);
 
         document.getElementById("viewBody").innerHTML = `

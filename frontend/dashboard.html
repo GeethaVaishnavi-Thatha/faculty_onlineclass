@@ -875,20 +875,111 @@ select.form-control option { background: var(--white); }
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* Mobile Navigation Toggle styling */
+.menu-toggle-mobile {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 6px;
+  align-items: center;
+  justify-content: center;
+  margin-right: 8px;
+  border-radius: var(--radius-xs);
+  transition: var(--transition);
+}
+.menu-toggle-mobile:hover {
+  background: var(--border-light);
+}
+
+.sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 199;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+.sidebar-backdrop.show {
+  opacity: 1;
+  pointer-events: all;
+}
+
 /* ═══════════════════════════════════════════════════════════════
    RESPONSIVE
 ═══════════════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
-  .sidebar { width: var(--sidebar-w-col); }
+  .menu-toggle-mobile {
+    display: flex;
+  }
+  .sidebar {
+    transform: translateX(-100%);
+    width: var(--sidebar-w) !important;
+    box-shadow: none;
+  }
+  .sidebar.mobile-open {
+    transform: translateX(0);
+    box-shadow: 4px 0 24px rgba(59,15,140,.25);
+  }
+  .sidebar-logo {
+    padding-right: 48px; /* Leave space for closing */
+  }
   .sidebar .sidebar-logo-text,
   .sidebar .nav-item-label,
-  .sidebar .admin-info { opacity: 0; width: 0; pointer-events: none; }
-  .sidebar .nav-item { justify-content: center; }
-  .sidebar .admin-card { justify-content: center; }
-  .main-wrapper { margin-left: var(--sidebar-w-col); }
-  .content-area { padding: 16px; }
-  .form-row { grid-template-columns: 1fr; }
-  .invig-filter-grid { grid-template-columns: 1fr 1fr; }
+  .sidebar .admin-info {
+    opacity: 1 !important;
+    width: auto !important;
+    pointer-events: auto !important;
+  }
+  .sidebar .nav-item {
+    justify-content: flex-start !important;
+  }
+  .sidebar .admin-card {
+    justify-content: flex-start !important;
+  }
+  .sidebar.collapsed {
+    transform: translateX(-100%);
+    width: var(--sidebar-w) !important;
+  }
+  .sidebar-toggle {
+    display: none; /* Hide computer collapse button on mobile */
+  }
+  .main-wrapper {
+    margin-left: 0 !important;
+    width: 100%;
+  }
+  .content-area {
+    padding: 16px 12px;
+  }
+  .topbar {
+    padding: 0 16px;
+  }
+  .form-row {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  .invig-filter-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  /* Detail view in modal layout stacking on small devices */
+  .detail-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 540px) {
+  .invig-filter-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .topbar-profile span {
+    display: none; /* Hide admin name text on tiny screens, show avatar only */
+  }
+  .modal-box {
+    max-height: 95vh;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -971,12 +1062,16 @@ select.form-control option { background: var(--white); }
     </div>
   </div>
 </aside>
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 
 <!-- ════════════════ MAIN WRAPPER ════════════════ -->
 <div class="main-wrapper" id="mainWrapper">
 
   <!-- TOPBAR -->
   <header class="topbar">
+    <button class="menu-toggle-mobile" id="menuToggleMobile" title="Toggle Menu">
+      <i class="fa-solid fa-bars"></i>
+    </button>
     <div class="topbar-left">
       <div class="breadcrumb">
         <span>Admin</span>

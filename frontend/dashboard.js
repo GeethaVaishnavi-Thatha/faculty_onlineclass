@@ -1273,6 +1273,39 @@ function renderPagination(containerId, pagination, onPageChange) {
 }
 
 // ═══════════════════════════════════════════════════════════════════
+// MOBILE RESPONSIVE DRAWER LISTENERS
+// ═══════════════════════════════════════════════════════════════════
+document.getElementById('menuToggleMobile').addEventListener('click', () => {
+    const sidebar = document.querySelector('.sidebar');
+    const backdrop = document.getElementById('sidebarBackdrop');
+    if (sidebar && backdrop) {
+        sidebar.classList.toggle('mobile-open');
+        backdrop.classList.toggle('show');
+    }
+});
+
+document.getElementById('sidebarBackdrop').addEventListener('click', () => {
+    const sidebar = document.querySelector('.sidebar');
+    const backdrop = document.getElementById('sidebarBackdrop');
+    if (sidebar && backdrop) {
+        sidebar.classList.remove('mobile-open');
+        backdrop.classList.remove('show');
+    }
+});
+
+// Auto-close sidebar drawer on nav selection on mobile
+document.querySelectorAll('.sidebar-nav .nav-item').forEach(item => {
+    item.addEventListener('click', () => {
+        const sidebar = document.querySelector('.sidebar');
+        const backdrop = document.getElementById('sidebarBackdrop');
+        if (sidebar && backdrop && window.innerWidth <= 768) {
+            sidebar.classList.remove('mobile-open');
+            backdrop.classList.remove('show');
+        }
+    });
+});
+
+// ═══════════════════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════════════════
 initDashboard();

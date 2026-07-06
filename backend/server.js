@@ -4,7 +4,10 @@ const dotenv = require('dotenv');
 const path = require('path');
 const fs = require('fs');
 const connectDB = require('./db');
-const facultyRoutes = require('./routes/facultyRoutes');
+const facultyRoutes      = require('./routes/facultyRoutes');
+const examStaffRoutes    = require('./routes/examStaffRoutes');
+const invoiceRoutes      = require('./routes/invoiceRoutes');
+const invigilationRoutes = require('./routes/invigilationRoutes');
 
 dotenv.config();
 const app = express();
@@ -39,7 +42,13 @@ app.use('/uploads', express.static(uploadDir));
 
 connectDB();
 
-app.use('/api/faculty', facultyRoutes);
+// ── Existing routes (DO NOT MODIFY) ──────────────────────────────────────
+app.use('/api/faculty',      facultyRoutes);
+
+// ── Admin Dashboard routes ────────────────────────────────────────────────
+app.use('/api/exam-staff',   examStaffRoutes);
+app.use('/api/invoices',     invoiceRoutes);
+app.use('/api/invigilation', invigilationRoutes);
 
 app.use((err, req, res, next) => {
     return res.status(400).json({ success: false, message: err.message });

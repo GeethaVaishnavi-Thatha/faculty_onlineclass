@@ -1,738 +1,1653 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard — Faculty Hub</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard — Online Examination Staff System</title>
+<meta name="description" content="Admin control panel for Online Examination Staff Registration and Management System">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   RESET & BASE
+═══════════════════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; scroll-behavior: smooth; }
+body {
+  font-family: 'Inter', sans-serif;
+  background: #F4F6FB;
+  color: #1E293B;
+  display: flex;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
 
-        :root, [data-theme="dark"] {
-            --navy:    #0B1120;
-            --slate:   #141C2E;
-            --panel:   #1A2440;
-            --panel2:  #1E2C50;
-            --border:  rgba(255,255,255,0.07);
-            --rule:    rgba(255,255,255,0.04);
-            --ink:     #4C5FD5;
-            --ink-lt:  #7B8EE8;
-            --stamp:   #E8A020;
-            --stamp-bg:rgba(232,160,32,0.1);
-            --text:    #D8DCEB;
-            --muted:   #6B7694;
-            --dim:     #3A4460;
-            --green:   #10b981;
-            --red:     #ef4444;
-            --heading: #EEF0F4;
-        }
-        [data-theme="light"] {
-            --navy:    #F0F3FA;
-            --slate:   #FFFFFF;
-            --panel:   #E8EBF5;
-            --panel2:  #DDE3F2;
-            --border:  rgba(0,0,0,0.09);
-            --rule:    rgba(0,0,0,0.05);
-            --ink:     #4C5FD5;
-            --ink-lt:  #4C5FD5;
-            --stamp:   #C07A00;
-            --stamp-bg:rgba(192,122,0,0.09);
-            --text:    #1E2A4A;
-            --muted:   #5A6480;
-            --dim:     #94A0C0;
-            --green:   #059669;
-            --red:     #DC2626;
-            --heading: #1A2240;
-        }
+/* ═══════════════════════════════════════════════════════════════
+   CSS VARIABLES
+═══════════════════════════════════════════════════════════════ */
+:root {
+  --sidebar-w:      250px;
+  --sidebar-w-col:  72px;
+  --topbar-h:       60px;
 
-        body {
-            background: var(--navy);
-            color: var(--text);
-            font-family: 'Inter', sans-serif;
-            min-height: 100vh;
-        }
+  /* Brand colors */
+  --purple-900:     #3B0F8C;
+  --purple-800:     #4C1CB5;
+  --purple-700:     #5B21B6;
+  --purple-600:     #6D28D9;
+  --purple-500:     #7C3AED;
+  --purple-400:     #8B5CF6;
+  --purple-100:     #EDE9FE;
+  --purple-50:      #F5F3FF;
 
-        /* dot grid */
-        body::before {
-            content: '';
-            position: fixed; inset: 0;
-            background-image: radial-gradient(circle, rgba(76,95,213,0.09) 1px, transparent 1px);
-            background-size: 28px 28px;
-            pointer-events: none; z-index: 0;
-        }
+  --blue-600:       #2563EB;
+  --blue-100:       #DBEAFE;
 
-        /* === NAVBAR === */
-        .navbar-dash {
-            position: sticky; top: 0; z-index: 100;
-            background: rgba(11,17,32,0.94);
-            backdrop-filter: blur(16px);
-            border-bottom: 1px solid var(--border);
-        }
+  --green-600:      #059669;
+  --green-100:      #D1FAE5;
 
-        .nav-inner {
-            max-width: 1280px;
-            margin: 0 auto;
-            padding: 13px 24px;
-            display: flex; align-items: center;
-            justify-content: space-between; gap: 16px;
-        }
+  --amber-600:      #D97706;
+  --amber-100:      #FEF3C7;
 
-        .nav-left { display: flex; align-items: center; gap: 14px; }
+  --red-600:        #DC2626;
+  --red-100:        #FEE2E2;
 
-        .brand-ico {
-            width: 36px; height: 36px;
-            background: var(--panel);
-            border: 1px solid rgba(76,95,213,0.35);
-            border-radius: 8px;
-            display: flex; align-items: center; justify-content: center;
-            color: var(--ink-lt); font-size: 0.9rem;
-        }
+  /* UI Neutrals */
+  --white:          #FFFFFF;
+  --bg:             #F4F6FB;
+  --bg-card:        #FFFFFF;
+  --border:         #E2E8F0;
+  --border-light:   #F1F5F9;
+  --text-primary:   #1E293B;
+  --text-secondary: #475569;
+  --text-muted:     #94A3B8;
+  --shadow-sm:      0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:      0 4px 16px rgba(0,0,0,.08), 0 2px 6px rgba(0,0,0,.04);
+  --shadow-lg:      0 10px 40px rgba(0,0,0,.12);
+  --radius:         12px;
+  --radius-sm:      8px;
+  --radius-xs:      6px;
+  --transition:     all .2s ease;
+}
 
-        .brand-name {
-            font-family: 'DM Serif Display', serif;
-            font-size: 1.25rem;
-            color: #EEF0F4; font-weight: 400;
-        }
+/* ═══════════════════════════════════════════════════════════════
+   SIDEBAR
+═══════════════════════════════════════════════════════════════ */
+.sidebar {
+  position: fixed;
+  top: 0; left: 0;
+  height: 100vh;
+  width: var(--sidebar-w);
+  background: linear-gradient(180deg, var(--purple-900) 0%, var(--purple-800) 100%);
+  display: flex;
+  flex-direction: column;
+  z-index: 200;
+  transition: width .3s cubic-bezier(.4,0,.2,1);
+  overflow: hidden;
+  box-shadow: 4px 0 24px rgba(59,15,140,.25);
+}
+.sidebar.collapsed { width: var(--sidebar-w-col); }
 
-        .admin-badge {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.62rem;
-            font-weight: 600;
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-            color: var(--stamp);
-            background: var(--stamp-bg);
-            border: 1px solid rgba(232,160,32,0.28);
-            border-radius: 5px;
-            padding: 4px 10px;
-        }
+/* Logo */
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 18px;
+  border-bottom: 1px solid rgba(255,255,255,.1);
+  min-height: var(--topbar-h);
+  flex-shrink: 0;
+}
+.sidebar-logo-icon {
+  width: 36px; height: 36px;
+  background: rgba(255,255,255,.15);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; color: #fff;
+  flex-shrink: 0;
+}
+.sidebar-logo-text { overflow: hidden; transition: opacity .25s, width .25s; }
+.sidebar-logo-text h2 {
+  font-size: .88rem; font-weight: 700;
+  color: #fff; line-height: 1.2; white-space: nowrap;
+}
+.sidebar-logo-text p {
+  font-size: .65rem; color: rgba(255,255,255,.55);
+  letter-spacing: .5px; white-space: nowrap; margin-top: 2px;
+}
+.sidebar.collapsed .sidebar-logo-text { opacity: 0; width: 0; pointer-events: none; }
 
-        .nav-right { display: flex; align-items: center; gap: 12px; }
+/* Toggle button */
+.sidebar-toggle {
+  position: absolute;
+  top: 14px; right: -14px;
+  width: 28px; height: 28px;
+  background: var(--purple-700);
+  border: 2px solid rgba(255,255,255,.2);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: .7rem;
+  cursor: pointer;
+  transition: var(--transition);
+  z-index: 201;
+}
+.sidebar-toggle:hover { background: var(--purple-600); }
 
-        .nav-user {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.72rem;
-            color: var(--muted);
-            letter-spacing: 0.3px;
-        }
+/* Nav */
+.sidebar-nav { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 12px 10px; }
+.sidebar-nav::-webkit-scrollbar { width: 3px; }
+.sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); border-radius: 10px; }
 
-        .nav-link-plain {
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: var(--ink-lt);
-            text-decoration: none;
-            transition: color 0.2s;
-            padding: 6px 10px;
-            border-radius: 6px;
-        }
-        .nav-link-plain:hover {
-            background: rgba(76,95,213,0.1);
-            color: #EEF0F4;
-        }
+.nav-section-label {
+  font-size: .6rem; font-weight: 700; letter-spacing: 1.5px;
+  text-transform: uppercase; color: rgba(255,255,255,.35);
+  padding: 10px 10px 6px;
+  white-space: nowrap;
+  transition: opacity .25s;
+}
+.sidebar.collapsed .nav-section-label { opacity: 0; }
 
-        .btn-logout {
-            font-size: 0.78rem;
-            font-weight: 600;
-            color: #FCA5A5;
-            background: rgba(220,38,38,0.1);
-            border: 1px solid rgba(220,38,38,0.22);
-            border-radius: 7px;
-            padding: 7px 14px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .btn-logout:hover { background: rgba(220,38,38,0.2); }
+.nav-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: rgba(255,255,255,.7);
+  cursor: pointer;
+  transition: var(--transition);
+  margin-bottom: 2px;
+  position: relative;
+  white-space: nowrap;
+  overflow: hidden;
+  user-select: none;
+}
+.nav-item:hover { background: rgba(255,255,255,.1); color: #fff; }
+.nav-item.active {
+  background: rgba(255,255,255,.18);
+  color: #fff;
+  font-weight: 600;
+}
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 20%; height: 60%;
+  width: 3px;
+  background: #fff;
+  border-radius: 0 4px 4px 0;
+}
+.nav-item-icon {
+  width: 20px; text-align: center;
+  font-size: .9rem; flex-shrink: 0;
+}
+.nav-item-label {
+  font-size: .82rem; font-weight: 500;
+  transition: opacity .2s;
+}
+.sidebar.collapsed .nav-item-label { opacity: 0; pointer-events: none; }
+.sidebar.collapsed .nav-item { justify-content: center; }
 
-        /* === PAGE CONTENT === */
-        .page-content {
-            position: relative; z-index: 10;
-            max-width: 1280px;
-            margin: 0 auto;
-            padding: 28px 24px 60px;
-        }
+/* Tooltip on collapsed */
+.sidebar.collapsed .nav-item { position: relative; }
+.sidebar.collapsed .nav-item::after {
+  content: attr(data-label);
+  position: absolute;
+  left: calc(100% + 12px);
+  top: 50%; transform: translateY(-50%);
+  background: var(--purple-800);
+  color: #fff;
+  font-size: .75rem; font-weight: 500;
+  padding: 5px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  opacity: 0; pointer-events: none;
+  transition: opacity .2s;
+  z-index: 999;
+  box-shadow: var(--shadow-md);
+}
+.sidebar.collapsed .nav-item:hover::after { opacity: 1; }
 
-        /* === STAT CARDS === */
-        .stat-strip {
-            display: flex; gap: 16px; margin-bottom: 28px;
-            flex-wrap: wrap;
-        }
+/* Sidebar footer */
+.sidebar-footer {
+  padding: 12px 10px;
+  border-top: 1px solid rgba(255,255,255,.1);
+  flex-shrink: 0;
+}
+.admin-card {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; border-radius: 10px;
+  background: rgba(255,255,255,.08);
+  overflow: hidden;
+}
+.admin-avatar {
+  width: 32px; height: 32px;
+  background: linear-gradient(135deg, var(--purple-400), var(--purple-600));
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .8rem; font-weight: 700; color: #fff;
+  flex-shrink: 0;
+}
+.admin-info { overflow: hidden; transition: opacity .25s, width .25s; }
+.admin-info h4 { font-size: .78rem; font-weight: 600; color: #fff; white-space: nowrap; }
+.admin-info p  { font-size: .65rem; color: rgba(255,255,255,.5); white-space: nowrap; }
+.sidebar.collapsed .admin-info { opacity: 0; width: 0; pointer-events: none; }
+.sidebar.collapsed .admin-card { justify-content: center; }
 
-        .stat-card {
-            background: var(--slate);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 18px 22px;
-            display: flex; align-items: center; gap: 16px;
-            min-width: 200px;
-            transition: border-color 0.2s;
-        }
-        .stat-card:hover { border-color: rgba(76,95,213,0.35); }
+/* ═══════════════════════════════════════════════════════════════
+   MAIN WRAPPER
+═══════════════════════════════════════════════════════════════ */
+.main-wrapper {
+  margin-left: var(--sidebar-w);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  transition: margin-left .3s cubic-bezier(.4,0,.2,1);
+}
+.main-wrapper.collapsed { margin-left: var(--sidebar-w-col); }
 
-        .stat-ico {
-            width: 42px; height: 42px;
-            background: rgba(76,95,213,0.13);
-            border: 1px solid rgba(76,95,213,0.25);
-            border-radius: 10px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1rem; color: var(--ink-lt);
-            flex-shrink: 0;
-        }
-        .stat-num {
-            font-family: 'DM Serif Display', serif;
-            font-size: 2rem;
-            color: #EEF0F4;
-            line-height: 1;
-        }
-        .stat-lbl {
-            font-size: 0.72rem;
-            color: var(--muted);
-            margin-top: 3px;
-            font-family: 'JetBrains Mono', monospace;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-        }
+/* ═══════════════════════════════════════════════════════════════
+   TOPBAR
+═══════════════════════════════════════════════════════════════ */
+.topbar {
+  position: sticky; top: 0; z-index: 100;
+  height: var(--topbar-h);
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center;
+  padding: 0 24px;
+  gap: 16px;
+  box-shadow: var(--shadow-sm);
+}
+.topbar-left { display: flex; align-items: center; gap: 12px; flex: 1; }
+.breadcrumb {
+  display: flex; align-items: center; gap: 6px;
+  font-size: .8rem; color: var(--text-muted);
+}
+.breadcrumb span:last-child { color: var(--text-primary); font-weight: 600; }
+.breadcrumb i { font-size: .65rem; }
 
-        /* === MAIN LEDGER CARD === */
-        .ledger-card {
-            background: var(--slate);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            overflow: hidden;
-        }
+.topbar-search {
+  position: relative; max-width: 280px; flex: 1;
+}
+.topbar-search input {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 14px 7px 34px;
+  font-size: .82rem; font-family: 'Inter', sans-serif;
+  color: var(--text-primary);
+  outline: none;
+  transition: var(--transition);
+}
+.topbar-search input:focus { border-color: var(--purple-500); box-shadow: 0 0 0 3px rgba(124,58,237,.1); }
+.topbar-search input::placeholder { color: var(--text-muted); }
+.topbar-search i {
+  position: absolute; left: 11px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted); font-size: .78rem;
+  pointer-events: none;
+}
 
-        .ledger-head {
-            background: var(--panel);
-            border-bottom: 1px solid var(--border);
-            padding: 18px 24px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            flex-wrap: wrap;
-        }
+.topbar-right { display: flex; align-items: center; gap: 10px; }
 
-        .ledger-title {
-            font-family: 'DM Serif Display', serif;
-            font-size: 1.3rem;
-            color: #EEF0F4;
-            font-weight: 400;
-        }
-        .ledger-sub {
-            font-size: 0.75rem;
-            color: var(--muted);
-            font-family: 'JetBrains Mono', monospace;
-            letter-spacing: 0.3px;
-            margin-top: 3px;
-        }
+.topbar-btn {
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-secondary);
+  display: flex; align-items: center; justify-content: center;
+  font-size: .85rem;
+  cursor: pointer;
+  transition: var(--transition);
+  position: relative;
+}
+.topbar-btn:hover { border-color: var(--purple-500); color: var(--purple-600); background: var(--purple-50); }
 
-        .ledger-controls {
-            display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
-        }
+.notif-dot {
+  position: absolute;
+  top: 7px; right: 7px;
+  width: 7px; height: 7px;
+  background: var(--red-600);
+  border-radius: 50%;
+  border: 2px solid var(--white);
+}
 
-        .search-wrap { position: relative; }
-        .search-ico {
-            position: absolute;
-            left: 12px; top: 50%;
-            transform: translateY(-50%);
-            color: var(--dim); font-size: 0.78rem;
-            pointer-events: none;
-        }
-        .search-dark {
-            background: var(--navy);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            color: var(--text);
-            font-family: 'Inter', sans-serif;
-            font-size: 0.85rem;
-            padding: 9px 14px 9px 34px;
-            outline: none;
-            width: 240px;
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-        .search-dark:focus {
-            border-color: var(--ink);
-            box-shadow: 0 0 0 3px rgba(76,95,213,0.13);
-        }
-        .search-dark::placeholder { color: var(--dim); }
+.topbar-profile {
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 12px 5px 6px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  cursor: pointer;
+  transition: var(--transition);
+}
+.topbar-profile:hover { border-color: var(--purple-400); background: var(--purple-50); }
+.topbar-avatar {
+  width: 28px; height: 28px;
+  background: linear-gradient(135deg, var(--purple-400), var(--purple-700));
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .75rem; font-weight: 700; color: #fff;
+}
+.topbar-profile span { font-size: .8rem; font-weight: 600; color: var(--text-primary); }
 
-        .btn-excel {
-            background: rgba(16,185,129,0.12);
-            border: 1px solid rgba(16,185,129,0.28);
-            color: #6EE7B7;
-            border-radius: 8px;
-            padding: 9px 16px;
-            font-size: 0.82rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            white-space: nowrap;
-            font-family: 'Inter', sans-serif;
-        }
-        .btn-excel:hover { background: rgba(16,185,129,0.22); }
-        .btn-excel:disabled { opacity: 0.6; cursor: not-allowed; }
+/* ═══════════════════════════════════════════════════════════════
+   CONTENT AREA
+═══════════════════════════════════════════════════════════════ */
+.content-area { flex: 1; padding: 24px; overflow-y: auto; }
+.page-section { display: none; }
+.page-section.active { display: block; }
 
-        /* === TABLE (LEDGER) === */
-        .table-scroll { overflow-x: auto; }
+/* Page Header */
+.page-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  margin-bottom: 24px; gap: 16px; flex-wrap: wrap;
+}
+.page-title { font-size: 1.3rem; font-weight: 700; color: var(--text-primary); }
+.page-subtitle { font-size: .8rem; color: var(--text-muted); margin-top: 3px; }
+.page-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
-        .dark-table { width: 100%; border-collapse: collapse; }
+/* ═══════════════════════════════════════════════════════════════
+   CARDS
+═══════════════════════════════════════════════════════════════ */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+.card-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-light);
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap;
+}
+.card-title {
+  font-size: .9rem; font-weight: 700; color: var(--text-primary);
+  display: flex; align-items: center; gap: 8px;
+}
+.card-title i { color: var(--purple-600); }
+.card-body { padding: 20px; }
 
-        .dark-table thead tr {
-            background: var(--navy);
-            border-bottom: 2px solid rgba(76,95,213,0.2);
-        }
+/* ═══════════════════════════════════════════════════════════════
+   STAT CARDS
+═══════════════════════════════════════════════════════════════ */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  display: flex; align-items: center; gap: 16px;
+  transition: var(--transition);
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+}
+.stat-card::after {
+  content: '';
+  position: absolute; bottom: 0; left: 0;
+  height: 3px; width: 100%;
+}
+.stat-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+.stat-card.purple::after { background: linear-gradient(90deg, var(--purple-500), var(--purple-400)); }
+.stat-card.blue::after   { background: linear-gradient(90deg, var(--blue-600), #3B82F6); }
+.stat-card.green::after  { background: linear-gradient(90deg, var(--green-600), #10B981); }
+.stat-card.amber::after  { background: linear-gradient(90deg, var(--amber-600), #F59E0B); }
+.stat-card.red::after    { background: linear-gradient(90deg, var(--red-600), #EF4444); }
 
-        .dark-table thead th {
-            padding: 12px 16px;
-            font-size: 0.65rem;
-            font-weight: 700;
-            font-family: 'JetBrains Mono', monospace;
-            text-transform: uppercase;
-            letter-spacing: 1.2px;
-            color: var(--muted);
-            white-space: nowrap;
-        }
+.stat-icon {
+  width: 48px; height: 48px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; flex-shrink: 0;
+}
+.stat-card.purple .stat-icon { background: var(--purple-100); color: var(--purple-700); }
+.stat-card.blue .stat-icon   { background: var(--blue-100);   color: var(--blue-600); }
+.stat-card.green .stat-icon  { background: var(--green-100);  color: var(--green-600); }
+.stat-card.amber .stat-icon  { background: var(--amber-100);  color: var(--amber-600); }
+.stat-card.red .stat-icon    { background: var(--red-100);    color: var(--red-600); }
 
-        /* ledger-style rows */
-        .dark-table tbody tr {
-            border-bottom: 1px solid var(--rule);
-            transition: background 0.15s;
-        }
-        .dark-table tbody tr:hover { background: rgba(76,95,213,0.06); }
-        .dark-table tbody tr:last-child { border-bottom: none; }
+.stat-info {}
+.stat-value { font-size: 1.6rem; font-weight: 800; color: var(--text-primary); line-height: 1; }
+.stat-label { font-size: .72rem; color: var(--text-muted); margin-top: 4px; font-weight: 500; }
+.stat-change { font-size: .7rem; color: var(--green-600); margin-top: 3px; }
 
-        .dark-table tbody td {
-            padding: 13px 16px;
-            font-size: 0.86rem;
-            vertical-align: middle;
-        }
+/* ═══════════════════════════════════════════════════════════════
+   BUTTONS
+═══════════════════════════════════════════════════════════════ */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  font-size: .82rem; font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer; border: none;
+  transition: var(--transition);
+  white-space: nowrap;
+  text-decoration: none;
+}
+.btn:disabled { opacity: .55; cursor: not-allowed; }
+.btn-sm { padding: 6px 12px; font-size: .78rem; }
+.btn-lg { padding: 10px 22px; font-size: .88rem; }
 
-        /* row number — ledger entry style */
-        .row-num {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.72rem;
-            color: var(--dim);
-        }
+.btn-primary   { background: var(--purple-700); color: #fff; }
+.btn-primary:hover:not(:disabled)   { background: var(--purple-600); box-shadow: 0 4px 14px rgba(91,33,182,.35); }
 
-        .avatar-sm {
-            width: 36px; height: 36px;
-            border-radius: 8px;
-            object-fit: cover;
-            border: 1px solid rgba(76,95,213,0.25);
-        }
+.btn-success   { background: var(--green-600); color: #fff; }
+.btn-success:hover:not(:disabled)   { background: #059669; box-shadow: 0 4px 14px rgba(5,150,105,.3); }
 
-        .name-cell strong {
-            font-weight: 600;
-            color: #EEF0F4;
-            font-size: 0.88rem;
-        }
+.btn-danger    { background: var(--red-600); color: #fff; }
+.btn-danger:hover:not(:disabled)    { background: #B91C1C; }
 
-        .mono-cell {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.78rem;
-            color: var(--muted);
-        }
+.btn-info      { background: var(--blue-600); color: #fff; }
+.btn-info:hover:not(:disabled)      { background: #1D4ED8; }
 
-        .qual-badge {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.68rem;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            background: rgba(76,95,213,0.13);
-            border: 1px solid rgba(76,95,213,0.28);
-            color: var(--ink-lt);
-            border-radius: 5px;
-            padding: 3px 9px;
-        }
+.btn-amber     { background: var(--amber-600); color: #fff; }
+.btn-amber:hover:not(:disabled)     { background: #B45309; }
 
-        /* action buttons */
-        .act-wrap { display: flex; gap: 6px; }
-        .btn-act {
-            width: 30px; height: 30px;
-            border-radius: 6px;
-            border: 1px solid transparent;
-            display: inline-flex; align-items: center; justify-content: center;
-            font-size: 0.78rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .btn-view { background: rgba(76,95,213,0.12); border-color: rgba(76,95,213,0.22); color: var(--ink-lt); }
-        .btn-view:hover { background: rgba(76,95,213,0.25); }
-        .btn-edit { background: rgba(232,160,32,0.12); border-color: rgba(232,160,32,0.22); color: var(--stamp); }
-        .btn-edit:hover { background: rgba(232,160,32,0.25); }
-        .btn-del { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.2); color: #FCA5A5; }
-        .btn-del:hover { background: rgba(239,68,68,0.22); }
+.btn-outline   {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+}
+.btn-outline:hover:not(:disabled) { border-color: var(--purple-500); color: var(--purple-600); background: var(--purple-50); }
 
-        /* empty state */
-        .empty-state {
-            text-align: center; padding: 56px 20px;
-            color: var(--dim); font-size: 0.88rem;
-        }
-        .empty-state i { font-size: 2.5rem; margin-bottom: 12px; display: block; }
+.btn-outline-danger {
+  background: transparent;
+  border: 1px solid var(--red-600);
+  color: var(--red-600);
+}
+.btn-outline-danger:hover:not(:disabled) { background: var(--red-100); }
 
-        /* toast */
-        .alert-toast {
-            position: fixed; top: 72px; right: 20px;
-            z-index: 9999; min-width: 300px;
-            border-radius: 10px; padding: 14px 18px;
-            font-size: 0.88rem; font-weight: 600;
-            display: none;
-            animation: slideIn 0.3s ease;
-        }
-        @keyframes slideIn {
-            from { transform: translateX(120%); opacity: 0; }
-            to   { transform: translateX(0); opacity: 1; }
-        }
+/* ═══════════════════════════════════════════════════════════════
+   FORM ELEMENTS
+═══════════════════════════════════════════════════════════════ */
+.form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 16px; }
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-label { font-size: .75rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .5px; }
+.form-label .req { color: var(--red-600); }
+.form-control {
+  padding: 9px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: .84rem; font-family: 'Inter', sans-serif;
+  color: var(--text-primary);
+  background: var(--white);
+  outline: none;
+  transition: var(--transition);
+  width: 100%;
+}
+.form-control:focus { border-color: var(--purple-500); box-shadow: 0 0 0 3px rgba(124,58,237,.1); }
+.form-control::placeholder { color: var(--text-muted); }
+.form-control.is-invalid { border-color: var(--red-600); }
+.form-control.is-valid   { border-color: var(--green-600); }
+.form-error { font-size: .72rem; color: var(--red-600); margin-top: 2px; display: none; }
+.form-error.show { display: block; }
 
-        /* === MODALS === */
-        .modal-dark .modal-content {
-            background: var(--slate);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            color: var(--text);
-        }
-        .modal-dark .modal-header {
-            background: var(--panel);
-            border-bottom: 1px solid var(--border);
-            border-radius: 16px 16px 0 0;
-            padding: 18px 24px;
-        }
-        .modal-dark .modal-footer {
-            background: var(--navy);
-            border-top: 1px solid var(--border);
-            border-radius: 0 0 16px 16px;
-            padding: 14px 24px;
-        }
-        .modal-dark .modal-body {
-            padding: 24px;
-            max-height: 68vh;
-            overflow-y: auto;
-            background-image: repeating-linear-gradient(
-                to bottom, transparent, transparent 47px,
-                var(--rule) 47px, var(--rule) 48px
-            );
-        }
-        .modal-dark .modal-body::-webkit-scrollbar { width: 4px; }
-        .modal-dark .modal-body::-webkit-scrollbar-thumb {
-            background: var(--dim); border-radius: 10px;
-        }
+select.form-control option { background: var(--white); }
 
-        /* modal section labels */
-        .m-sec {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.62rem;
-            font-weight: 700;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            color: var(--ink-lt);
-            margin: 20px 0 10px;
-            display: flex; align-items: center; gap: 8px;
-        }
-        .m-sec::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: rgba(76,95,213,0.2);
-        }
-        .m-sec:first-child { margin-top: 0; }
+/* ═══════════════════════════════════════════════════════════════
+   TABLES
+═══════════════════════════════════════════════════════════════ */
+.table-wrap { overflow-x: auto; }
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .82rem;
+}
+.data-table thead tr {
+  background: var(--purple-700);
+}
+.data-table thead th {
+  padding: 11px 14px;
+  color: #fff; font-weight: 600;
+  text-align: left;
+  white-space: nowrap;
+  font-size: .78rem;
+  letter-spacing: .3px;
+  cursor: pointer;
+  user-select: none;
+}
+.data-table thead th:hover { background: var(--purple-600); }
+.data-table thead th.sort-asc::after  { content: ' ↑'; }
+.data-table thead th.sort-desc::after { content: ' ↓'; }
 
-        /* detail view rows */
-        .detail-row {
-            display: flex;
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.04);
-        }
-        .detail-row:last-child { border-bottom: none; }
-        .detail-key {
-            font-size: 0.72rem;
-            font-weight: 600;
-            color: var(--muted);
-            width: 150px;
-            flex-shrink: 0;
-            font-family: 'JetBrains Mono', monospace;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .detail-val {
-            font-size: 0.85rem;
-            color: var(--text);
-            word-break: break-all;
-        }
+.data-table tbody tr {
+  border-bottom: 1px solid var(--border-light);
+  transition: background .15s;
+}
+.data-table tbody tr:hover { background: var(--purple-50); }
+.data-table tbody tr:last-child { border-bottom: none; }
+.data-table tbody td {
+  padding: 11px 14px;
+  color: var(--text-primary);
+  vertical-align: middle;
+}
 
-        /* edit form */
-        .e-label {
-            display: block;
-            font-size: 0.68rem; font-weight: 700;
-            letter-spacing: 0.8px; text-transform: uppercase;
-            color: var(--muted); margin-bottom: 6px;
-        }
-        .e-input {
-            width: 100%;
-            background: var(--panel);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            color: var(--text);
-            font-family: 'Inter', sans-serif;
-            font-size: 0.85rem;
-            padding: 9px 12px;
-            outline: none;
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-        .e-input:focus {
-            border-color: var(--ink);
-            box-shadow: 0 0 0 3px rgba(76,95,213,0.13);
-        }
-        .e-input::placeholder { color: var(--dim); }
-        .e-input option { background: var(--panel); }
-        .e-input.is-valid  { border-color: var(--green) !important; }
-        .e-input.is-invalid { border-color: var(--red) !important; }
-        .e-err { font-size: 0.72rem; color: #FCA5A5; margin-top: 4px; display: none; }
+/* ═══════════════════════════════════════════════════════════════
+   BADGES
+═══════════════════════════════════════════════════════════════ */
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: .7rem; font-weight: 600;
+}
+.badge-purple  { background: var(--purple-100); color: var(--purple-700); }
+.badge-green   { background: var(--green-100);  color: var(--green-600); }
+.badge-red     { background: var(--red-100);    color: var(--red-600); }
+.badge-amber   { background: var(--amber-100);  color: var(--amber-600); }
+.badge-blue    { background: var(--blue-100);   color: var(--blue-600); }
+.badge-gray    { background: #F1F5F9;            color: #64748B; }
 
-        /* modal buttons */
-        .btn-save {
-            background: var(--ink);
-            border: none; border-radius: 8px;
-            color: #fff; padding: 10px 22px;
-            font-weight: 700; font-size: 0.88rem;
-            cursor: pointer; transition: all 0.2s;
-            font-family: 'Inter', sans-serif;
-        }
-        .btn-save:hover { background: #5C6FE5; transform: translateY(-1px); }
+/* ═══════════════════════════════════════════════════════════════
+   PAGINATION
+═══════════════════════════════════════════════════════════════ */
+.pagination {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 20px;
+  border-top: 1px solid var(--border-light);
+  flex-wrap: wrap; gap: 10px;
+}
+.pagination-info { font-size: .78rem; color: var(--text-muted); }
+.pagination-controls { display: flex; gap: 4px; align-items: center; }
+.page-btn {
+  width: 32px; height: 32px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--white);
+  color: var(--text-secondary);
+  font-size: .78rem; font-weight: 600;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: var(--transition);
+}
+.page-btn:hover:not(:disabled) { border-color: var(--purple-500); color: var(--purple-700); background: var(--purple-50); }
+.page-btn.active { background: var(--purple-700); border-color: var(--purple-700); color: #fff; }
+.page-btn:disabled { opacity: .4; cursor: not-allowed; }
 
-        .btn-cancel {
-            background: transparent;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            color: var(--muted); padding: 10px 18px;
-            font-weight: 600; font-size: 0.88rem;
-            cursor: pointer; transition: all 0.2s;
-            font-family: 'Inter', sans-serif;
-        }
-        .btn-cancel:hover { background: var(--panel); color: var(--text); }
+/* ═══════════════════════════════════════════════════════════════
+   SEARCH + FILTER BAR
+═══════════════════════════════════════════════════════════════ */
+.filter-bar {
+  display: flex; align-items: center; gap: 10px;
+  flex-wrap: wrap;
+}
+.search-box {
+  position: relative; flex: 1; min-width: 200px; max-width: 320px;
+}
+.search-box input {
+  width: 100%;
+  padding: 8px 14px 8px 34px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: .82rem; font-family: 'Inter', sans-serif;
+  outline: none; background: var(--white);
+  color: var(--text-primary);
+  transition: var(--transition);
+}
+.search-box input:focus { border-color: var(--purple-500); box-shadow: 0 0 0 3px rgba(124,58,237,.1); }
+.search-box input::placeholder { color: var(--text-muted); }
+.search-box i {
+  position: absolute; left: 11px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted); font-size: .78rem;
+  pointer-events: none;
+}
+.filter-select {
+  padding: 8px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: .8rem; font-family: 'Inter', sans-serif;
+  color: var(--text-primary); background: var(--white);
+  outline: none; cursor: pointer;
+  transition: var(--transition);
+}
+.filter-select:focus { border-color: var(--purple-500); }
 
-        .modal-title-txt {
-            font-family: 'DM Serif Display', serif;
-            font-size: 1.1rem;
-            color: #EEF0F4;
-            font-weight: 400;
-        }
-        .modal-title-badge {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.65rem;
-            color: var(--stamp);
-            background: var(--stamp-bg);
-            border: 1px solid rgba(232,160,32,0.25);
-            border-radius: 4px;
-            padding: 3px 8px;
-            letter-spacing: 0.5px;
-        }
+/* ═══════════════════════════════════════════════════════════════
+   ACTION BUTTONS IN TABLE
+═══════════════════════════════════════════════════════════════ */
+.table-actions { display: flex; gap: 5px; align-items: center; }
+.act-btn {
+  width: 28px; height: 28px;
+  border-radius: 6px; border: 1px solid transparent;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .75rem; cursor: pointer;
+  transition: var(--transition);
+}
+.act-btn-view   { background: var(--purple-100); border-color: var(--purple-100); color: var(--purple-700); }
+.act-btn-view:hover   { background: var(--purple-700); color: #fff; }
+.act-btn-edit   { background: var(--amber-100); border-color: var(--amber-100); color: var(--amber-600); }
+.act-btn-edit:hover   { background: var(--amber-600); color: #fff; }
+.act-btn-delete { background: var(--red-100); border-color: var(--red-100); color: var(--red-600); }
+.act-btn-delete:hover { background: var(--red-600); color: #fff; }
+.act-btn-download { background: var(--blue-100); border-color: var(--blue-100); color: var(--blue-600); }
+.act-btn-download:hover { background: var(--blue-600); color: #fff; }
 
-        .photo-circle {
-            width: 72px; height: 72px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid rgba(76,95,213,0.35);
-        }
-    </style>
+/* ═══════════════════════════════════════════════════════════════
+   EMPTY STATE
+═══════════════════════════════════════════════════════════════ */
+.empty-state {
+  text-align: center; padding: 48px 20px;
+  color: var(--text-muted);
+}
+.empty-state i { font-size: 2.5rem; margin-bottom: 12px; display: block; opacity: .4; }
+.empty-state p { font-size: .85rem; }
+
+/* ═══════════════════════════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════════════════════════ */
+#toast-container {
+  position: fixed; top: 16px; right: 16px;
+  z-index: 9999; display: flex; flex-direction: column; gap: 8px;
+}
+.toast {
+  min-width: 280px; max-width: 360px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: .83rem; font-weight: 500;
+  color: #fff;
+  display: flex; align-items: center; gap: 10px;
+  box-shadow: var(--shadow-lg);
+  animation: slideInRight .3s ease;
+}
+.toast.success { background: var(--green-600); }
+.toast.error   { background: var(--red-600); }
+.toast.info    { background: var(--blue-600); }
+.toast.warning { background: var(--amber-600); }
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to   { transform: translateX(0); opacity: 1; }
+}
+@keyframes fadeOut {
+  to { opacity: 0; transform: translateX(100%); }
+}
+.toast.removing { animation: fadeOut .3s ease forwards; }
+
+/* ═══════════════════════════════════════════════════════════════
+   MODAL
+═══════════════════════════════════════════════════════════════ */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.45);
+  z-index: 500;
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+  opacity: 0; pointer-events: none;
+  transition: opacity .25s;
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal-box {
+  background: var(--white);
+  border-radius: var(--radius);
+  width: 100%; max-width: 560px;
+  max-height: 90vh; overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-16px) scale(.98);
+  transition: transform .25s ease;
+}
+.modal-overlay.open .modal-box { transform: translateY(0) scale(1); }
+.modal-box.modal-lg { max-width: 800px; }
+.modal-box.modal-xl { max-width: 1000px; }
+.modal-header {
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--purple-700);
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+.modal-header h3 { font-size: .95rem; font-weight: 700; color: #fff; }
+.modal-close {
+  width: 28px; height: 28px;
+  border-radius: 6px;
+  background: rgba(255,255,255,.15);
+  border: none;
+  color: #fff; font-size: .85rem;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: var(--transition);
+}
+.modal-close:hover { background: rgba(255,255,255,.3); }
+.modal-body { padding: 22px; }
+.modal-footer {
+  padding: 14px 22px;
+  border-top: 1px solid var(--border);
+  display: flex; justify-content: flex-end; gap: 8px;
+  background: var(--bg);
+  border-radius: 0 0 var(--radius) var(--radius);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ─── PAGE 1: DASHBOARD HOME ─────────────────────────────────
+═══════════════════════════════════════════════════════════════ */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 20px;
+}
+@media (max-width: 1100px) { .dashboard-grid { grid-template-columns: 1fr; } }
+
+.recent-table tbody td:first-child { font-weight: 600; }
+.quick-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.quick-action-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 16px 10px;
+  border-radius: 10px;
+  border: 1.5px dashed var(--border);
+  cursor: pointer;
+  transition: var(--transition);
+  background: transparent;
+  font-family: 'Inter', sans-serif;
+  color: var(--text-secondary);
+  font-size: .78rem; font-weight: 500;
+}
+.quick-action-btn:hover {
+  border-color: var(--purple-500);
+  background: var(--purple-50);
+  color: var(--purple-700);
+}
+.quick-action-btn i { font-size: 1.2rem; }
+
+.activity-item {
+  display: flex; gap: 12px; padding: 10px 0;
+  border-bottom: 1px solid var(--border-light);
+}
+.activity-item:last-child { border-bottom: none; }
+.activity-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  margin-top: 5px; flex-shrink: 0;
+}
+.activity-text { font-size: .8rem; color: var(--text-secondary); line-height: 1.4; }
+.activity-time { font-size: .7rem; color: var(--text-muted); margin-top: 2px; }
+
+/* ═══════════════════════════════════════════════════════════════
+   ─── PAGE 2: STAFF REGISTRATION ─────────────────────────────
+═══════════════════════════════════════════════════════════════ */
+.reg-form-card { max-width: 860px; }
+.form-section-label {
+  font-size: .7rem; font-weight: 700; letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--purple-700);
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--purple-100);
+  margin-bottom: 16px;
+  display: flex; align-items: center; gap: 6px;
+}
+.form-actions {
+  display: flex; gap: 10px; justify-content: flex-end;
+  padding-top: 16px; border-top: 1px solid var(--border);
+  margin-top: 4px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ─── PAGE 3: USER DETAILS ───────────────────────────────────
+═══════════════════════════════════════════════════════════════ */
+/* (uses shared table + filter-bar styles) */
+
+/* ═══════════════════════════════════════════════════════════════
+   ─── PAGE 4: INVIGILATION CHART ────────────────────────────
+═══════════════════════════════════════════════════════════════ */
+.invig-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px; margin-bottom: 20px;
+}
+.invig-summary-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+}
+.invig-summary-card .sv { font-size: 1.5rem; font-weight: 800; color: var(--text-primary); }
+.invig-summary-card .sl { font-size: .7rem; color: var(--text-muted); margin-top: 3px; font-weight: 500; }
+
+.invig-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px; margin-bottom: 16px;
+}
+
+.invig-badge-available  { background: #D1FAE5; color: #065F46; border-radius: 20px; padding: 2px 10px; font-size: .7rem; font-weight: 600; }
+.invig-badge-assigned   { background: #EDE9FE; color: #5B21B6; border-radius: 20px; padding: 2px 10px; font-size: .7rem; font-weight: 600; }
+.invig-badge-unavail    { background: #FEE2E2; color: #991B1B; border-radius: 20px; padding: 2px 10px; font-size: .7rem; font-weight: 600; }
+.invig-badge-conflict   { background: #FEF3C7; color: #92400E; border-radius: 20px; padding: 2px 10px; font-size: .7rem; font-weight: 600; }
+.invig-badge-onleave    { background: #E0F2FE; color: #0369A1; border-radius: 20px; padding: 2px 10px; font-size: .7rem; font-weight: 600; }
+
+/* ═══════════════════════════════════════════════════════════════
+   ─── PAGE 5: STATEMENT / INVOICE ───────────────────────────
+═══════════════════════════════════════════════════════════════ */
+.invoice-filter-bar {
+  display: flex; align-items: center; gap: 12px;
+  flex-wrap: wrap; margin-bottom: 0;
+}
+.invoice-table .amount-input {
+  width: 90px; padding: 5px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px; font-size: .82rem;
+  font-family: 'Inter', sans-serif;
+  text-align: right; color: var(--text-primary);
+  outline: none;
+  transition: var(--transition);
+}
+.invoice-table .amount-input:focus { border-color: var(--purple-500); }
+.invoice-total-row td {
+  font-weight: 700; background: var(--purple-50);
+  border-top: 2px solid var(--purple-200, #DDD6FE);
+}
+.invoice-total-amount {
+  font-size: 1rem; font-weight: 800; color: var(--purple-700);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ─── PAGE 6: REGISTERED INVOICES ────────────────────────────
+═══════════════════════════════════════════════════════════════ */
+/* (uses shared table styles) */
+
+/* ═══════════════════════════════════════════════════════════════
+   LOADING SPINNER
+═══════════════════════════════════════════════════════════════ */
+.spinner-overlay {
+  position: absolute; inset: 0;
+  background: rgba(255,255,255,.7);
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--radius);
+  z-index: 50;
+}
+.spinner {
+  width: 32px; height: 32px;
+  border: 3px solid var(--purple-100);
+  border-top-color: var(--purple-700);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ═══════════════════════════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .sidebar { width: var(--sidebar-w-col); }
+  .sidebar .sidebar-logo-text,
+  .sidebar .nav-item-label,
+  .sidebar .admin-info { opacity: 0; width: 0; pointer-events: none; }
+  .sidebar .nav-item { justify-content: center; }
+  .sidebar .admin-card { justify-content: center; }
+  .main-wrapper { margin-left: var(--sidebar-w-col); }
+  .content-area { padding: 16px; }
+  .form-row { grid-template-columns: 1fr; }
+  .invig-filter-grid { grid-template-columns: 1fr 1fr; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   DETAIL VIEW IN MODAL
+═══════════════════════════════════════════════════════════════ */
+.detail-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+}
+.detail-item label { font-size: .7rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; display: block; margin-bottom: 3px; }
+.detail-item span  { font-size: .84rem; color: var(--text-primary); word-break: break-all; }
+
+/* Highlight rows */
+.invig-row-assigned   td { background: rgba(237,233,254,.3); }
+.invig-row-conflict   td { background: rgba(254,243,199,.4); }
+.invig-row-unavail    td { background: rgba(254,226,226,.3); }
+</style>
 </head>
 <body>
 
-<nav class="navbar-dash">
-    <div class="nav-inner">
-        <div class="nav-left">
-            <div class="brand-ico"><i class="fa-solid fa-graduation-cap"></i></div>
-            <span class="brand-name">Faculty Hub</span>
-            <span class="admin-badge"><i class="fa-solid fa-shield-halved me-1"></i>ADMIN</span>
-        </div>
-        <div class="nav-right">
-            <span class="nav-user"><i class="fa-solid fa-user me-1"></i><span id="adminName">admin</span></span>
-            <a href="index.html" class="nav-link-plain"><i class="fa-solid fa-file-pen me-1"></i>Registration Form</a>
-            <button id="themeBtn" title="Toggle theme" style="width:34px;height:34px;border-radius:7px;background:var(--panel);border:1px solid var(--border);color:var(--muted);display:inline-flex;align-items:center;justify-content:center;font-size:0.82rem;cursor:pointer;transition:all 0.2s"><i id="themeIcon" class="fa-solid fa-moon"></i></button>
-            <button class="btn-logout" onclick="logout()"><i class="fa-solid fa-right-from-bracket me-1"></i>Logout</button>
-        </div>
+<!-- ════════════════ SIDEBAR ════════════════ -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-icon"><i class="fa-solid fa-graduation-cap"></i></div>
+    <div class="sidebar-logo-text">
+      <h2>Exam Admin</h2>
+      <p>ONLINE EXAM SYSTEM</p>
     </div>
-</nav>
+  </div>
 
-<div class="page-content">
+  <button class="sidebar-toggle" id="sidebarToggle" title="Toggle sidebar">
+    <i class="fa-solid fa-chevron-left" id="toggleIcon"></i>
+  </button>
 
-    <!-- Stats -->
-    <div class="stat-strip">
-        <div class="stat-card">
-            <div class="stat-ico"><i class="fa-solid fa-users"></i></div>
-            <div>
-                <div class="stat-num" id="statTotal">0</div>
-                <div class="stat-lbl">Total Faculty</div>
-            </div>
-        </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">MAIN MENU</div>
+
+    <div class="nav-item active" data-page="dashboard" data-label="Dashboard">
+      <div class="nav-item-icon"><i class="fa-solid fa-gauge-high"></i></div>
+      <span class="nav-item-label">Dashboard</span>
+    </div>
+    <div class="nav-item" data-page="staff-reg" data-label="Faculty Registration">
+      <div class="nav-item-icon"><i class="fa-solid fa-user-plus"></i></div>
+      <span class="nav-item-label">Faculty Registration</span>
+    </div>
+    <div class="nav-item" data-page="user-details" data-label="User Details">
+      <div class="nav-item-icon"><i class="fa-solid fa-users"></i></div>
+      <span class="nav-item-label">User Details</span>
+    </div>
+    <div class="nav-item" data-page="invigilation" data-label="Invigilation Chart">
+      <div class="nav-item-icon"><i class="fa-solid fa-table-list"></i></div>
+      <span class="nav-item-label">Invigilation Chart</span>
     </div>
 
-    <!-- Ledger -->
-    <div class="ledger-card">
-        <div class="ledger-head">
-            <div>
-                <div class="ledger-title">Faculty Registry</div>
-                <div class="ledger-sub">ALL REGISTERED MEMBERS · ACADEMIC YEAR 2026</div>
-            </div>
-            <div class="ledger-controls">
-                <div class="search-wrap">
-                    <span class="search-ico"><i class="fa-solid fa-magnifying-glass"></i></span>
-                    <input type="text" class="search-dark" id="searchInput" placeholder="Search name, mobile, ID…">
-                </div>
-                <button class="btn-excel" id="excelBtn">
-                    <i class="fa-solid fa-file-arrow-down me-1"></i>Export Excel
-                </button>
-            </div>
-        </div>
+    <div class="nav-section-label" style="margin-top:8px">FINANCE</div>
 
-        <div class="table-scroll">
-            <table class="dark-table">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Photo</th>
-                        <th>Faculty Name</th>
-                        <th>Mobile</th>
-                        <th>College Email</th>
-                        <th>Qualification</th>
-                        <th style="text-align:center">Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="tableBody"></tbody>
+    <div class="nav-item" data-page="invoice" data-label="Statement / Invoice">
+      <div class="nav-item-icon"><i class="fa-solid fa-file-invoice-dollar"></i></div>
+      <span class="nav-item-label">Statement / Invoice</span>
+    </div>
+    <div class="nav-item" data-page="reg-invoices" data-label="Registered Invoices">
+      <div class="nav-item-icon"><i class="fa-solid fa-receipt"></i></div>
+      <span class="nav-item-label">Registered Invoices</span>
+    </div>
+
+    <div class="nav-section-label" style="margin-top:8px">SYSTEM</div>
+
+    <div class="nav-item" data-page="settings" data-label="Settings">
+      <div class="nav-item-icon"><i class="fa-solid fa-gear"></i></div>
+      <span class="nav-item-label">Settings</span>
+    </div>
+    <div class="nav-item" id="logoutBtn" data-label="Logout">
+      <div class="nav-item-icon"><i class="fa-solid fa-right-from-bracket"></i></div>
+      <span class="nav-item-label">Logout</span>
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="admin-card">
+      <div class="admin-avatar" id="sidebarAdminInitial">A</div>
+      <div class="admin-info">
+        <h4 id="sidebarAdminName">Admin</h4>
+        <p>Administrator</p>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- ════════════════ MAIN WRAPPER ════════════════ -->
+<div class="main-wrapper" id="mainWrapper">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <div class="breadcrumb">
+        <span>Admin</span>
+        <i class="fa-solid fa-chevron-right"></i>
+        <span id="breadcrumbPage">Dashboard</span>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <button class="topbar-btn" title="Notifications" id="notifBtn">
+        <i class="fa-solid fa-bell"></i>
+        <span class="notif-dot"></span>
+      </button>
+      <div class="topbar-profile" id="topbarProfile">
+        <div class="topbar-avatar" id="topbarInitial">A</div>
+        <span id="topbarName">Admin</span>
+        <i class="fa-solid fa-chevron-down" style="font-size:.65rem;color:var(--text-muted)"></i>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTENT -->
+  <main class="content-area">
+
+    <!-- ══════════════════════════════════════════════
+         PAGE 1: DASHBOARD
+    ══════════════════════════════════════════════ -->
+    <section class="page-section active" id="page-dashboard">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Dashboard Overview</div>
+          <div class="page-subtitle">Welcome back — here's what's happening today.</div>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-outline btn-sm" onclick="refreshDashboard()"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
+        </div>
+      </div>
+
+      <!-- Stat Cards -->
+      <div class="stats-grid" id="dashStats">
+        <div class="stat-card purple">
+          <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
+          <div class="stat-info">
+            <div class="stat-value" id="ds-total">0</div>
+            <div class="stat-label">Total Staff</div>
+          </div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-icon"><i class="fa-solid fa-user-check"></i></div>
+          <div class="stat-info">
+            <div class="stat-value" id="ds-active">0</div>
+            <div class="stat-label">Active Staff</div>
+          </div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-icon"><i class="fa-solid fa-circle-check"></i></div>
+          <div class="stat-info">
+            <div class="stat-value" id="ds-available">0</div>
+            <div class="stat-label">Available Now</div>
+          </div>
+        </div>
+        <div class="stat-card amber">
+          <div class="stat-icon"><i class="fa-solid fa-chalkboard-teacher"></i></div>
+          <div class="stat-info">
+            <div class="stat-value" id="ds-invig">0</div>
+            <div class="stat-label">Invigilators</div>
+          </div>
+        </div>
+        <div class="stat-card red">
+          <div class="stat-icon"><i class="fa-solid fa-file-invoice-dollar"></i></div>
+          <div class="stat-info">
+            <div class="stat-value" id="ds-invoices">0</div>
+            <div class="stat-label">Total Invoices</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom grid -->
+      <div class="dashboard-grid">
+        <!-- Recent Registrations -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i class="fa-solid fa-clock-rotate-left"></i> Recent Registrations</div>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table recent-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Role</th>
+                  <th>Department</th>
+                  <th>Registered</th>
+                </tr>
+              </thead>
+              <tbody id="recentRegistrations">
+                <tr><td colspan="4"><div class="empty-state"><i class="fa-solid fa-inbox"></i><p>No recent registrations</p></div></td></tr>
+              </tbody>
             </table>
-            <div class="empty-state d-none" id="emptyState">
-                <i class="fa-regular fa-folder-open" style="color:var(--dim)"></i>
-                No faculty records found.
-            </div>
+          </div>
         </div>
-    </div>
-</div>
 
-<!-- Toast -->
-<div class="alert-toast" id="toast"></div>
+        <!-- Side panel -->
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <!-- Role Breakdown -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><i class="fa-solid fa-chart-pie"></i> Role Breakdown</div>
+            </div>
+            <div class="card-body" style="padding:14px 20px;" id="roleBreakdown">
+              <div class="empty-state" style="padding:20px"><i class="fa-solid fa-circle-info"></i><p>No data</p></div>
+            </div>
+          </div>
 
-<!-- VIEW MODAL -->
-<div class="modal fade modal-dark" id="viewModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="d-flex align-items-center gap-2">
-                    <span class="modal-title-txt">Faculty Record</span>
-                    <span class="modal-title-badge">VIEW</span>
-                </div>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          <!-- Quick Actions -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><i class="fa-solid fa-bolt"></i> Quick Actions</div>
             </div>
-            <div class="modal-body" id="viewBody"></div>
-            <div class="modal-footer">
-                <button type="button" class="btn-cancel" data-bs-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- EDIT MODAL -->
-<div class="modal fade modal-dark" id="editModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-xl">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="d-flex align-items-center gap-2">
-                    <span class="modal-title-txt">Edit Faculty Record</span>
-                    <span class="modal-title-badge">EDIT</span>
-                </div>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body" style="background-image:none">
-                <input type="hidden" id="editId">
-
-                <div class="m-sec"><i class="fa-solid fa-user me-1"></i>Personal Information</div>
-                <div class="row g-3">
-                    <div class="col-md-6"><label class="e-label">Faculty Name *</label><input type="text" class="e-input" id="eFacultyName" placeholder="Full name"><div class="e-err" id="eFacultyNameErr">Min 3 alphabets required.</div></div>
-                    <div class="col-md-3"><label class="e-label">Mobile Number *</label><input type="text" class="e-input" id="eMobile" placeholder="10 digits" maxlength="10"><div class="e-err" id="eMobileErr">Valid 10-digit number required.</div></div>
-                    <div class="col-md-3"><label class="e-label">Alternate Mobile</label><input type="text" class="e-input" id="eAltMobile" placeholder="Optional" maxlength="10"></div>
-                    <div class="col-md-6"><label class="e-label">College Email *</label><input type="email" class="e-input" id="eCollegeEmail" placeholder="name@college.ac.in"><div class="e-err" id="eCollegeEmailErr">Valid email required.</div></div>
-                    <div class="col-md-6"><label class="e-label">Personal Email *</label><input type="email" class="e-input" id="ePersonalEmail" placeholder="name@gmail.com"><div class="e-err" id="ePersonalEmailErr">Valid email required.</div></div>
-                    <div class="col-md-4"><label class="e-label">Father's Name *</label><input type="text" class="e-input" id="eFatherName" placeholder="Father's name"><div class="e-err" id="eFatherNameErr">Only alphabets allowed.</div></div>
-                    <div class="col-md-4"><label class="e-label">Mother's Name *</label><input type="text" class="e-input" id="eMotherName" placeholder="Mother's name"><div class="e-err" id="eMotherNameErr">Only alphabets allowed.</div></div>
-                    <div class="col-md-2"><label class="e-label">Qualification *</label>
-                        <select class="e-input" id="eQualification">
-                            <option value="">Choose…</option>
-                            <option value="B.Tech">B.Tech</option>
-                            <option value="M.Tech">M.Tech</option>
-                            <option value="Ph.D.">Ph.D.</option>
-                            <option value="MCA">MCA</option>
-                        </select>
-                    </div>
-                    <div class="col-md-2"><label class="e-label">TCS Code</label><input type="text" class="e-input" id="eTcsCode" placeholder="Optional"></div>
-                </div>
-
-                <div class="m-sec"><i class="fa-solid fa-id-card me-1"></i>Identity Documents</div>
-                <div class="row g-3">
-                    <div class="col-md-4"><label class="e-label">Aadhaar Number *</label><input type="text" class="e-input" id="eAadhaar" placeholder="12 digits" maxlength="12"><div class="e-err" id="eAadhaarErr">Exactly 12 digits required.</div></div>
-                    <div class="col-md-4"><label class="e-label">PAN Number</label><input type="text" class="e-input text-uppercase" id="ePan" placeholder="ABCDE1234F (optional)" maxlength="10"></div>
-                    <div class="col-md-4"><label class="e-label">New Aadhaar File <span style="color:var(--muted)">(optional)</span></label><input type="file" class="e-input" id="eAadhaarFile" accept=".pdf,.jpg,.jpeg,.png"></div>
-                    <div class="col-md-4"><label class="e-label">New PAN File <span style="color:var(--muted)">(optional)</span></label><input type="file" class="e-input" id="ePanFile" accept=".pdf,.jpg,.jpeg,.png"></div>
-                    <div class="col-md-4"><label class="e-label">New Passport Photo <span style="color:var(--muted)">(optional)</span></label><input type="file" class="e-input" id="ePhoto" accept=".jpg,.jpeg,.png"></div>
-                </div>
-
-                <div class="m-sec"><i class="fa-solid fa-building-columns me-1"></i>Bank Details</div>
-                <div class="row g-3">
-                    <div class="col-md-6"><label class="e-label">Bank Name *</label><input type="text" class="e-input" id="eBankName" placeholder="e.g. State Bank of India"><div class="e-err" id="eBankNameErr">Bank name required.</div></div>
-                    <div class="col-md-3"><label class="e-label">IFSC Code *</label><input type="text" class="e-input text-uppercase" id="eIfsc" placeholder="SBIN0001234" maxlength="11"><div class="e-err" id="eIfscErr">Valid IFSC required.</div></div>
-                    <div class="col-md-3"></div>
-                    <div class="col-md-6"><label class="e-label">Account Number *</label><input type="text" class="e-input" id="eBankAcc" placeholder="Account number"><div class="e-err" id="eBankAccErr">Account number required.</div></div>
-                    <div class="col-md-6"><label class="e-label">Re-enter Account Number *</label><input type="text" class="e-input" id="eBankAccConfirm" placeholder="Re-enter account number"><div class="e-err" id="eBankAccConfirmErr">Account numbers do not match.</div></div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn-cancel" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn-save" id="saveEditBtn"><i class="fa-solid fa-floppy-disk me-2"></i>Save Changes</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- DELETE MODAL -->
-<div class="modal fade modal-dark" id="delModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="d-flex align-items-center gap-2">
-                    <span class="modal-title-txt" style="color:#FCA5A5">Confirm Delete</span>
-                    <span class="modal-title-badge" style="color:#FCA5A5;background:rgba(239,68,68,0.1);border-color:rgba(239,68,68,0.25)">IRREVERSIBLE</span>
-                </div>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body" style="background-image:none;max-height:none">
-                <p style="color:var(--muted);font-size:0.88rem;line-height:1.6">
-                    This will permanently remove the faculty record from the registry. This action cannot be undone.
-                </p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn-cancel" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" id="confirmDelBtn"
-                    style="background:rgba(220,38,38,0.9);border:none;border-radius:8px;color:#fff;padding:10px 20px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;font-size:0.88rem">
-                    <i class="fa-solid fa-trash me-2"></i>Delete Record
+            <div class="card-body">
+              <div class="quick-actions">
+                <button class="quick-action-btn" onclick="navigate('staff-reg')">
+                  <i class="fa-solid fa-user-plus" style="color:var(--purple-600)"></i>
+                  <span>Add Staff</span>
                 </button>
+                <button class="quick-action-btn" onclick="navigate('invigilation')">
+                  <i class="fa-solid fa-table-list" style="color:var(--blue-600)"></i>
+                  <span>Invigilation</span>
+                </button>
+                <button class="quick-action-btn" onclick="navigate('invoice')">
+                  <i class="fa-solid fa-file-invoice" style="color:var(--green-600)"></i>
+                  <span>Statement</span>
+                </button>
+                <button class="quick-action-btn" onclick="navigate('user-details')">
+                  <i class="fa-solid fa-users" style="color:var(--amber-600)"></i>
+                  <span>View Users</span>
+                </button>
+              </div>
             </div>
+          </div>
         </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════
+         PAGE 2: FACULTY / STAFF REGISTRATION
+    ══════════════════════════════════════════════ -->
+    <section class="page-section" id="page-staff-reg">
+      <div class="page-header">
+        <div>
+          <div class="page-title"><i class="fa-solid fa-user-plus" style="color:var(--purple-600);margin-right:8px"></i>Staff Registration Form</div>
+          <div class="page-subtitle">Register new examination staff members</div>
+        </div>
+      </div>
+
+      <div class="card reg-form-card">
+        <div class="card-body">
+          <form id="staffForm" novalidate>
+            <div class="form-section-label"><i class="fa-solid fa-user"></i> Personal Information</div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Full Name <span class="req">*</span></label>
+                <input type="text" class="form-control" id="sf-name" placeholder="Enter Full Name">
+                <div class="form-error" id="sf-name-err">Name must be at least 3 characters.</div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Role / Designation <span class="req">*</span></label>
+                <select class="form-control" id="sf-role">
+                  <option value="">Select Role</option>
+                  <option>Invigilator</option>
+                  <option>Observer</option>
+                  <option>Support Staff</option>
+                  <option>Chief Superintendent</option>
+                  <option>Deputy Superintendent</option>
+                </select>
+                <div class="form-error" id="sf-role-err">Please select a role.</div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Department <span class="req">*</span></label>
+                <input type="text" class="form-control" id="sf-dept" placeholder="Enter Department">
+                <div class="form-error" id="sf-dept-err">Department is required.</div>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Phone Number <span class="req">*</span></label>
+                <input type="text" class="form-control" id="sf-phone" placeholder="Enter Phone Number" maxlength="10">
+                <div class="form-error" id="sf-phone-err">Enter a valid 10-digit phone number.</div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Email ID <span class="req">*</span></label>
+                <input type="email" class="form-control" id="sf-email" placeholder="Enter Email ID">
+                <div class="form-error" id="sf-email-err">Enter a valid email address.</div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Date of Birth</label>
+                <input type="date" class="form-control" id="sf-dob">
+              </div>
+            </div>
+            <div class="form-row" style="grid-template-columns:1fr;">
+              <div class="form-group">
+                <label class="form-label">Address</label>
+                <input type="text" class="form-control" id="sf-address" placeholder="Enter Address">
+              </div>
+            </div>
+
+            <div class="form-section-label" style="margin-top:20px"><i class="fa-solid fa-building-columns"></i> Bank Details</div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Account Number <span class="req">*</span></label>
+                <input type="text" class="form-control" id="sf-bank" placeholder="Enter Account Number">
+                <div class="form-error" id="sf-bank-err">Account number is required.</div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">IFSC Code <span class="req">*</span></label>
+                <input type="text" class="form-control text-uppercase" id="sf-ifsc" placeholder="Enter IFSC Code" maxlength="11">
+                <div class="form-error" id="sf-ifsc-err">Enter a valid IFSC code (e.g. SBIN0001234).</div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Experience (Years)</label>
+                <input type="number" class="form-control" id="sf-exp" placeholder="0" min="0" max="50">
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="button" class="btn btn-outline" id="staffResetBtn"><i class="fa-solid fa-rotate-left"></i> Reset</button>
+              <button type="submit" class="btn btn-primary" id="staffSubmitBtn"><i class="fa-solid fa-paper-plane"></i> Submit Registration</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════
+         PAGE 3: USER DETAILS
+    ══════════════════════════════════════════════ -->
+    <section class="page-section" id="page-user-details">
+      <div class="page-header">
+        <div>
+          <div class="page-title"><i class="fa-solid fa-users" style="color:var(--purple-600);margin-right:8px"></i>User Details</div>
+          <div class="page-subtitle" id="ud-subtitle">Registered staff members</div>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-success btn-sm" id="udExcelBtn"><i class="fa-solid fa-file-excel"></i> Export to Excel</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><i class="fa-solid fa-list"></i> Registered Users</div>
+          <div class="filter-bar">
+            <div class="search-box">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="udSearch" placeholder="Search by name or role…">
+            </div>
+            <select class="filter-select" id="udRoleFilter">
+              <option value="All">All Roles</option>
+              <option>Invigilator</option>
+              <option>Observer</option>
+              <option>Support Staff</option>
+              <option>Chief Superintendent</option>
+              <option>Deputy Superintendent</option>
+            </select>
+            <select class="filter-select" id="udStatusFilter">
+              <option value="All">All Status</option>
+              <option>Active</option>
+              <option>Inactive</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="table-wrap" style="position:relative;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width:44px">#</th>
+                <th data-sort="name">Name</th>
+                <th data-sort="role">Role</th>
+                <th data-sort="phone">Phone</th>
+                <th data-sort="email">Email</th>
+                <th>Account Number</th>
+                <th data-sort="registrationDate">Registered On</th>
+                <th style="text-align:center">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="udTableBody"></tbody>
+          </table>
+          <div id="udEmpty" class="empty-state" style="display:none">
+            <i class="fa-regular fa-folder-open"></i><p>No records found.</p>
+          </div>
+        </div>
+        <div class="pagination" id="udPagination"></div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════
+         PAGE 4: INVIGILATION CHART
+    ══════════════════════════════════════════════ -->
+    <section class="page-section" id="page-invigilation">
+      <div class="page-header">
+        <div>
+          <div class="page-title"><i class="fa-solid fa-table-list" style="color:var(--purple-600);margin-right:8px"></i>Invigilation Chart</div>
+          <div class="page-subtitle">Intelligent exam duty allocation system</div>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-outline btn-sm" id="invigClearBtn"><i class="fa-solid fa-xmark"></i> Clear</button>
+          <button class="btn btn-amber btn-sm" id="invigAutoBtn"><i class="fa-solid fa-wand-magic-sparkles"></i> Auto Allocate</button>
+          <button class="btn btn-success btn-sm" id="invigSaveBtn"><i class="fa-solid fa-floppy-disk"></i> Save Chart</button>
+          <button class="btn btn-primary btn-sm" id="invigExcelBtn"><i class="fa-solid fa-file-excel"></i> Export Excel</button>
+          <button class="btn btn-info btn-sm" id="invigPrintBtn"><i class="fa-solid fa-print"></i> Print</button>
+        </div>
+      </div>
+
+      <!-- Summary Cards -->
+      <div class="invig-summary-grid">
+        <div class="invig-summary-card">
+          <div class="sv" id="inv-total">0</div><div class="sl">Total Staff</div>
+        </div>
+        <div class="invig-summary-card" style="border-color:#DDD6FE">
+          <div class="sv" id="inv-assigned" style="color:var(--purple-700)">0</div><div class="sl">Assigned</div>
+        </div>
+        <div class="invig-summary-card" style="border-color:#D1FAE5">
+          <div class="sv" id="inv-available" style="color:var(--green-600)">0</div><div class="sl">Available</div>
+        </div>
+        <div class="invig-summary-card" style="border-color:#FEE2E2">
+          <div class="sv" id="inv-conflicts" style="color:var(--red-600)">0</div><div class="sl">Conflicts</div>
+        </div>
+        <div class="invig-summary-card" style="border-color:#FEF3C7">
+          <div class="sv" id="inv-remaining" style="color:var(--amber-600)">0</div><div class="sl">Remaining</div>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-body" style="padding:16px 20px">
+          <div class="invig-filter-grid">
+            <div class="form-group">
+              <label class="form-label">Exam Date <span class="req">*</span></label>
+              <input type="date" class="form-control" id="inv-date">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Department</label>
+              <input type="text" class="form-control" id="inv-dept" placeholder="All Departments">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Building</label>
+              <input type="text" class="form-control" id="inv-building" placeholder="e.g. Block A">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Floor</label>
+              <input type="text" class="form-control" id="inv-floor" placeholder="e.g. Ground Floor">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Halls (comma-separated)</label>
+              <input type="text" class="form-control" id="inv-halls" placeholder="Hall 1, Hall 2, Hall 3">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Faculty Role Filter</label>
+              <select class="form-control" id="inv-role-filter">
+                <option value="All">All Roles</option>
+                <option>Invigilator</option>
+                <option>Observer</option>
+                <option>Support Staff</option>
+                <option>Chief Superintendent</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Staff per Hall</label>
+              <input type="number" class="form-control" id="inv-per-hall" value="2" min="1" max="10">
+            </div>
+            <div class="form-group" style="align-self:flex-end">
+              <button class="btn btn-primary" style="width:100%" id="invigLoadBtn">
+                <i class="fa-solid fa-magnifying-glass"></i> Load Staff
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Allocation Table -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><i class="fa-solid fa-clipboard-list"></i> Staff Allocation Table</div>
+          <div class="filter-bar">
+            <div class="search-box">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="invigSearch" placeholder="Search staff…">
+            </div>
+            <select class="filter-select" id="invigStatusFilter">
+              <option value="All">All Status</option>
+              <option value="Available">Available</option>
+              <option value="Assigned">Assigned</option>
+              <option value="Unavailable">Unavailable</option>
+              <option value="Conflict">Conflict</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table" id="invigTable">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Faculty Name</th>
+                <th>Department</th>
+                <th>Role</th>
+                <th>Experience</th>
+                <th>Availability</th>
+                <th>Assigned Hall</th>
+                <th>Assigned Shift</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="invigTableBody"></tbody>
+          </table>
+          <div id="invigEmpty" class="empty-state" style="display:none">
+            <i class="fa-solid fa-calendar-xmark"></i>
+            <p>Load staff using the filters above to begin allocation.</p>
+          </div>
+        </div>
+        <div class="pagination" id="invigPagination"></div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════
+         PAGE 5: STATEMENT / INVOICE
+    ══════════════════════════════════════════════ -->
+    <section class="page-section" id="page-invoice">
+      <div class="page-header">
+        <div>
+          <div class="page-title"><i class="fa-solid fa-file-invoice-dollar" style="color:var(--purple-600);margin-right:8px"></i>Statement / Invoice</div>
+          <div class="page-subtitle">Generate and manage payment statements for exam staff</div>
+        </div>
+      </div>
+
+      <!-- Filter bar -->
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-body" style="padding:14px 20px">
+          <div class="invoice-filter-bar">
+            <div class="form-group" style="flex:0 0 auto">
+              <label class="form-label">Select Exam Date <span class="req">*</span></label>
+              <input type="date" class="form-control" id="inv-exam-date" style="min-width:160px">
+            </div>
+            <div class="form-group" style="flex:0 0 auto">
+              <label class="form-label">Default Amount (₹)</label>
+              <input type="number" class="form-control" id="inv-default-amt" value="1500" min="0" style="min-width:130px">
+            </div>
+            <div style="display:flex;gap:8px;align-self:flex-end;flex-wrap:wrap">
+              <button class="btn btn-primary" id="genStmtBtn"><i class="fa-solid fa-wand-magic-sparkles"></i> Generate Statement</button>
+              <button class="btn btn-outline" id="clearStmtBtn"><i class="fa-solid fa-rotate-left"></i> Clear</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Invoice Table -->
+      <div class="card" id="invoiceCard" style="display:none">
+        <div class="card-header">
+          <div class="card-title"><i class="fa-solid fa-table"></i> Statement — <span id="invoiceDateLabel"></span></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-success btn-sm" id="saveInvoiceBtn"><i class="fa-solid fa-floppy-disk"></i> Save Invoice</button>
+            <button class="btn btn-info btn-sm" id="printInvoiceBtn"><i class="fa-solid fa-print"></i> Print / PDF</button>
+            <button class="btn btn-outline btn-sm" id="resetAmountsBtn"><i class="fa-solid fa-rotate-right"></i> Reset Amounts</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table invoice-table">
+            <thead>
+              <tr>
+                <th style="width:44px">S.No</th>
+                <th>Name</th>
+                <th>Role</th>
+                <th>Phone Number</th>
+                <th>Account Number</th>
+                <th style="text-align:right">Amount (₹)</th>
+              </tr>
+            </thead>
+            <tbody id="invoiceTableBody"></tbody>
+            <tfoot>
+              <tr class="invoice-total-row">
+                <td colspan="5" style="text-align:right;font-weight:700;padding-right:14px">Total Amount (₹)</td>
+                <td style="text-align:right;padding:11px 14px">
+                  <span class="invoice-total-amount" id="invoiceTotal">0</span>
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════
+         PAGE 6: REGISTERED INVOICES
+    ══════════════════════════════════════════════ -->
+    <section class="page-section" id="page-reg-invoices">
+      <div class="page-header">
+        <div>
+          <div class="page-title"><i class="fa-solid fa-receipt" style="color:var(--purple-600);margin-right:8px"></i>Registered Invoices</div>
+          <div class="page-subtitle" id="ri-subtitle">All saved payment statements</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><i class="fa-solid fa-list"></i> Invoice Records</div>
+          <div class="filter-bar">
+            <div class="search-box">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="riSearch" placeholder="Search invoices…">
+            </div>
+            <input type="date" class="filter-select" id="riDateFilter" title="Filter by date">
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Invoice No.</th>
+                <th>Exam Date</th>
+                <th>No. of Invigilators</th>
+                <th>Total Amount (₹)</th>
+                <th>Generated On</th>
+                <th style="text-align:center">Action</th>
+              </tr>
+            </thead>
+            <tbody id="riTableBody"></tbody>
+          </table>
+          <div id="riEmpty" class="empty-state" style="display:none">
+            <i class="fa-regular fa-folder-open"></i><p>No invoices found.</p>
+          </div>
+        </div>
+        <div class="pagination" id="riPagination"></div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════
+         PAGE 7: SETTINGS
+    ══════════════════════════════════════════════ -->
+    <section class="page-section" id="page-settings">
+      <div class="page-header">
+        <div>
+          <div class="page-title"><i class="fa-solid fa-gear" style="color:var(--purple-600);margin-right:8px"></i>Settings</div>
+          <div class="page-subtitle">System configuration and preferences</div>
+        </div>
+      </div>
+      <div class="card" style="max-width:500px">
+        <div class="card-header"><div class="card-title"><i class="fa-solid fa-user-shield"></i> Admin Account</div></div>
+        <div class="card-body">
+          <div class="form-group" style="margin-bottom:14px">
+            <label class="form-label">Admin Username</label>
+            <input type="text" class="form-control" value="admin" disabled>
+          </div>
+          <div class="form-group" style="margin-bottom:14px">
+            <label class="form-label">College Name</label>
+            <input type="text" class="form-control" id="cfg-college" value="Sri Venkateswara College (Autonomous)">
+          </div>
+          <div class="form-group" style="margin-bottom:14px">
+            <label class="form-label">Default Invigilator Amount (₹)</label>
+            <input type="number" class="form-control" id="cfg-amount" value="1500" min="0">
+          </div>
+          <button class="btn btn-primary" onclick="saveSettings()"><i class="fa-solid fa-floppy-disk"></i> Save Settings</button>
+        </div>
+      </div>
+    </section>
+
+  </main><!-- /content-area -->
+</div><!-- /main-wrapper -->
+
+<!-- Toast Container -->
+<div id="toast-container"></div>
+
+<!-- ════════════════ MODALS ════════════════ -->
+
+<!-- View Staff Modal -->
+<div class="modal-overlay" id="viewStaffModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3><i class="fa-solid fa-eye me-2"></i>Staff Details</h3>
+      <button class="modal-close" onclick="closeModal('viewStaffModal')"><i class="fa-solid fa-xmark"></i></button>
     </div>
+    <div class="modal-body" id="viewStaffBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('viewStaffModal')">Close</button>
+    </div>
+  </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    (function(){
-        const t = localStorage.getItem('fhTheme') || 'dark';
-        document.documentElement.setAttribute('data-theme', t);
-        document.getElementById('themeIcon').className = t === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
-        document.getElementById('themeBtn').addEventListener('click', () => {
-            const cur = document.documentElement.getAttribute('data-theme');
-            const nxt = cur === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-theme', nxt);
-            localStorage.setItem('fhTheme', nxt);
-            document.getElementById('themeIcon').className = nxt === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
-        });
-    })();
-</script>
+<!-- Edit Staff Modal -->
+<div class="modal-overlay" id="editStaffModal">
+  <div class="modal-box modal-lg">
+    <div class="modal-header">
+      <h3><i class="fa-solid fa-pen me-2"></i>Edit Staff Record</h3>
+      <button class="modal-close" onclick="closeModal('editStaffModal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-staff-id">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Full Name <span class="req">*</span></label><input type="text" class="form-control" id="e-name"><div class="form-error" id="e-name-err">Required.</div></div>
+        <div class="form-group"><label class="form-label">Role <span class="req">*</span></label>
+          <select class="form-control" id="e-role">
+            <option>Invigilator</option><option>Observer</option><option>Support Staff</option><option>Chief Superintendent</option><option>Deputy Superintendent</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Department <span class="req">*</span></label><input type="text" class="form-control" id="e-dept"><div class="form-error" id="e-dept-err">Required.</div></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Phone <span class="req">*</span></label><input type="text" class="form-control" id="e-phone" maxlength="10"><div class="form-error" id="e-phone-err">Valid 10-digit number required.</div></div>
+        <div class="form-group"><label class="form-label">Email <span class="req">*</span></label><input type="email" class="form-control" id="e-email"><div class="form-error" id="e-email-err">Valid email required.</div></div>
+        <div class="form-group"><label class="form-label">Date of Birth</label><input type="date" class="form-control" id="e-dob"></div>
+      </div>
+      <div class="form-row" style="grid-template-columns:1fr">
+        <div class="form-group"><label class="form-label">Address</label><input type="text" class="form-control" id="e-address"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Bank Account <span class="req">*</span></label><input type="text" class="form-control" id="e-bank"><div class="form-error" id="e-bank-err">Required.</div></div>
+        <div class="form-group"><label class="form-label">IFSC Code <span class="req">*</span></label><input type="text" class="form-control" id="e-ifsc" maxlength="11"><div class="form-error" id="e-ifsc-err">Valid IFSC required.</div></div>
+        <div class="form-group"><label class="form-label">Experience (Yrs)</label><input type="number" class="form-control" id="e-exp" min="0"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Status</label>
+          <select class="form-control" id="e-status"><option>Active</option><option>Inactive</option></select>
+        </div>
+        <div class="form-group"><label class="form-label">Availability</label>
+          <select class="form-control" id="e-avail"><option>Available</option><option>Unavailable</option><option>On Leave</option></select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('editStaffModal')">Cancel</button>
+      <button class="btn btn-primary" id="saveEditBtn"><i class="fa-solid fa-floppy-disk"></i> Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirm Modal -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal-box">
+    <div class="modal-header" style="background:var(--red-600)">
+      <h3><i class="fa-solid fa-triangle-exclamation me-2"></i>Confirm Delete</h3>
+      <button class="modal-close" onclick="closeModal('deleteModal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <p style="color:var(--text-secondary);font-size:.87rem;line-height:1.6">
+        This action will permanently remove the record. It cannot be undone.
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('deleteModal')">Cancel</button>
+      <button class="btn btn-danger" id="confirmDeleteBtn"><i class="fa-solid fa-trash"></i> Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- View Invoice Modal -->
+<div class="modal-overlay" id="viewInvoiceModal">
+  <div class="modal-box modal-xl">
+    <div class="modal-header">
+      <h3><i class="fa-solid fa-file-invoice me-2"></i>Invoice Details</h3>
+      <button class="modal-close" onclick="closeModal('viewInvoiceModal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body" id="viewInvoiceBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('viewInvoiceModal')">Close</button>
+      <button class="btn btn-info" id="downloadInvoiceExcelBtn"><i class="fa-solid fa-file-excel"></i> Download Excel</button>
+      <button class="btn btn-primary" id="downloadInvoicePDFBtn"><i class="fa-solid fa-file-pdf"></i> Download PDF</button>
+    </div>
+  </div>
+</div>
+
 <script src="dashboard.js"></script>
 </body>
 </html>

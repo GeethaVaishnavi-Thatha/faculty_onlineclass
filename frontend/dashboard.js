@@ -426,6 +426,8 @@ async function editStaff(id) {
         if (!res.success) return;
         const d = res.data;
 
+        document.getElementById('edit-staff-id').value = id;
+
         // Initialize stateful data
         initialEditData = {
             'e-name': d.facultyName || '',

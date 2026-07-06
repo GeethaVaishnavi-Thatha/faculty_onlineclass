@@ -383,93 +383,193 @@ async function viewStaff(id) {
 }
 
 // ─── EDIT STAFF ───────────────────────────────────────────────────
+let initialEditData = {};
+
+const validators = {
+    'e-name': (val) => val.length >= 3,
+    'e-dept': (val) => val.length > 0,
+    'e-phone': (val) => /^[6-9]\d{9}$/.test(val),
+    'e-alt-phone': (val) => !val || /^[6-9]\d{9}$/.test(val),
+    'e-email': (val) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val),
+    'e-personal-email': (val) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val),
+    'e-father': (val) => val.length > 0,
+    'e-mother': (val) => val.length > 0,
+    'e-tcs': (val) => true,
+    'e-aadhaar': (val) => /^\d{12}$/.test(val),
+    'e-pan': (val) => !val || /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(val),
+    'e-bank-name': (val) => val.length > 0,
+    'e-bank': (val) => val.length > 0,
+    'e-ifsc': (val) => /^[A-Z]{4}0[A-Z0-9]{6}$/.test(val),
+    'e-exp': (val) => !isNaN(val) && parseInt(val) >= 0
+};
+
+const errorMessages = {
+    'e-name': 'Required (min 3 chars).',
+    'e-dept': 'Required.',
+    'e-phone': 'Valid 10-digit number required.',
+    'e-alt-phone': 'Valid 10-digit number required.',
+    'e-email': 'Valid college email required.',
+    'e-personal-email': 'Valid personal email required.',
+    'e-father': 'Required.',
+    'e-mother': 'Required.',
+    'e-aadhaar': 'Valid 12-digit Aadhaar required.',
+    'e-pan': 'Valid PAN (e.g. ABCDE1234F) required.',
+    'e-bank-name': 'Required.',
+    'e-bank': 'Required.',
+    'e-ifsc': 'Valid 11-digit IFSC required.',
+    'e-exp': 'Must be 0 or greater.'
+};
+
 async function editStaff(id) {
     try {
         const res = await apiFetch(`${API.staff}/${id}`);
         if (!res.success) return;
         const d = res.data;
 
-        document.getElementById('edit-staff-id').value = id;
-        document.getElementById('e-name').value    = d.facultyName || '';
-        document.getElementById('e-role').value    = d.qualification || 'B.Tech';
-        document.getElementById('e-dept').value    = d.department || '';
-        document.getElementById('e-phone').value   = d.mobileNumber || '';
-        document.getElementById('e-alt-phone').value = d.alternateMobile || '';
-        document.getElementById('e-email').value   = d.collegeEmail || '';
-        document.getElementById('e-personal-email').value = d.personalEmail || '';
-        document.getElementById('e-father').value   = d.fatherName || '';
-        document.getElementById('e-mother').value   = d.motherName || '';
-        document.getElementById('e-tcs').value      = d.tcsCode || '';
-        document.getElementById('e-aadhaar').value  = d.aadhaarNumber || '';
-        document.getElementById('e-pan').value      = d.panNumber || '';
-        document.getElementById('e-bank-name').value = d.bankName || '';
-        document.getElementById('e-bank').value    = d.bankAccount || '';
-        document.getElementById('e-ifsc').value    = d.ifscCode || '';
-        document.getElementById('e-exp').value     = d.experience || 0;
-        document.getElementById('e-status').value  = d.status || 'Active';
-        document.getElementById('e-avail').value   = d.availability || 'Available';
+        // Initialize stateful data
+        initialEditData = {
+            'e-name': d.facultyName || '',
+            'e-role': d.qualification || 'B.Tech',
+            'e-dept': d.department || '',
+            'e-phone': d.mobileNumber || '',
+            'e-alt-phone': d.alternateMobile || '',
+            'e-email': d.collegeEmail || '',
+            'e-personal-email': d.personalEmail || '',
+            'e-father': d.fatherName || '',
+            'e-mother': d.motherName || '',
+            'e-tcs': d.tcsCode || '',
+            'e-aadhaar': d.aadhaarNumber || '',
+            'e-pan': d.panNumber || '',
+            'e-bank-name': d.bankName || '',
+            'e-bank': d.bankAccount || '',
+            'e-ifsc': d.ifscCode || '',
+            'e-exp': d.experience || 0,
+            'e-status': d.status || 'Active',
+            'e-avail': d.availability || 'Available'
+        };
 
-        document.querySelectorAll('#editStaffModal .form-control').forEach(el => el.classList.remove('is-valid', 'is-invalid'));
-        document.querySelectorAll('#editStaffModal .form-error').forEach(el => el.classList.remove('show'));
+        // Populate fields
+        for (const key in initialEditData) {
+            const el = document.getElementById(key);
+            if (el) el.value = initialEditData[key];
+        }
+
+        // Clean validation markers entirely upon opening modal
+        document.querySelectorAll('#editStaffModal .form-control').forEach(el => {
+            el.classList.remove('is-valid', 'is-invalid');
+        });
+        document.querySelectorAll('#editStaffModal .form-error').forEach(el => {
+            el.classList.remove('show');
+        });
 
         openModal('editStaffModal');
     } catch (err) { toast('error', 'Failed to load staff for editing.'); }
 }
 
 document.getElementById('saveEditBtn').addEventListener('click', async () => {
-    const id    = document.getElementById('edit-staff-id').value;
-    const name  = document.getElementById('e-name').value.trim();
-    const dept  = document.getElementById('e-dept').value.trim();
-    const phone = document.getElementById('e-phone').value.trim();
-    const altPhone = document.getElementById('e-alt-phone').value.trim();
-    const email = document.getElementById('e-email').value.trim();
-    const personalEmail = document.getElementById('e-personal-email').value.trim();
-    const father = document.getElementById('e-father').value.trim();
-    const mother = document.getElementById('e-mother').value.trim();
-    const tcs = document.getElementById('e-tcs').value.trim();
-    const aadhaar = document.getElementById('e-aadhaar').value.trim();
-    const pan = document.getElementById('e-pan').value.trim().toUpperCase();
-    const bankName = document.getElementById('e-bank-name').value.trim();
-    const bank  = document.getElementById('e-bank').value.trim();
-    const ifsc  = document.getElementById('e-ifsc').value.trim().toUpperCase();
+    const id = document.getElementById('edit-staff-id').value;
+    
+    // Read current data
+    const currentEditData = {
+        'e-name': document.getElementById('e-name').value.trim(),
+        'e-role': document.getElementById('e-role').value,
+        'e-dept': document.getElementById('e-dept').value.trim(),
+        'e-phone': document.getElementById('e-phone').value.trim(),
+        'e-alt-phone': document.getElementById('e-alt-phone').value.trim(),
+        'e-email': document.getElementById('e-email').value.trim(),
+        'e-personal-email': document.getElementById('e-personal-email').value.trim(),
+        'e-father': document.getElementById('e-father').value.trim(),
+        'e-mother': document.getElementById('e-mother').value.trim(),
+        'e-tcs': document.getElementById('e-tcs').value.trim(),
+        'e-aadhaar': document.getElementById('e-aadhaar').value.trim(),
+        'e-pan': document.getElementById('e-pan').value.trim().toUpperCase(),
+        'e-bank-name': document.getElementById('e-bank-name').value.trim(),
+        'e-bank': document.getElementById('e-bank').value.trim(),
+        'e-ifsc': document.getElementById('e-ifsc').value.trim().toUpperCase(),
+        'e-exp': parseInt(document.getElementById('e-exp').value) || 0,
+        'e-status': document.getElementById('e-status').value,
+        'e-avail': document.getElementById('e-avail').value
+    };
 
-    let ok = true;
-    ok = validateField('e-name',  'e-name-err',  name.length >= 3,                            'Required.')                       && ok;
-    ok = validateField('e-dept',  'e-dept-err',  dept.length > 0,                             'Required.')                       && ok;
-    ok = validateField('e-phone', 'e-phone-err', /^[6-9]d{9}$/.test(phone),                  'Valid 10-digit number required.')  && ok;
-    ok = validateField('e-email', 'e-email-err', /^[^s@]+@[^s@]+.[^s@]+$/.test(email),    'Valid email required.')            && ok;
-    ok = validateField('e-personal-email', 'e-personal-email-err', /^[^s@]+@[^s@]+.[^s@]+$/.test(personalEmail), 'Valid email required.') && ok;
-    ok = validateField('e-father', 'e-father-err', father.length > 0,                         'Required.')                       && ok;
-    ok = validateField('e-mother', 'e-mother-err', mother.length > 0,                         'Required.')                       && ok;
-    ok = validateField('e-aadhaar', 'e-aadhaar-err', /^d{12}$/.test(aadhaar),                 'Valid 12-digit Aadhaar required.') && ok;
-    ok = validateField('e-bank-name', 'e-bank-name-err', bankName.length > 0,                 'Required.')                       && ok;
-    ok = validateField('e-bank',  'e-bank-err',  bank.length > 0,                             'Required.')                       && ok;
-    ok = validateField('e-ifsc',  'e-ifsc-err',  /^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifsc),       'Valid IFSC required.')             && ok;
-    if (!ok) return;
+    // Check changes
+    let hasChanged = false;
+    for (const key in currentEditData) {
+        if (currentEditData[key] != initialEditData[key]) {
+            hasChanged = true;
+            break;
+        }
+    }
+
+    if (!hasChanged) {
+        // Close immediately without saving if no changes detected
+        closeModal('editStaffModal');
+        toast('info', 'No changes detected.');
+        return;
+    }
+
+    // Validate only modified fields
+    let allOk = true;
+    for (const key in currentEditData) {
+        const inputEl = document.getElementById(key);
+        const errorEl = document.getElementById(key + '-err');
+
+        if (currentEditData[key] != initialEditData[key]) {
+            const validator = validators[key];
+            if (validator) {
+                const isValid = validator(currentEditData[key]);
+                const errMsg = errorMessages[key] || 'Invalid value.';
+                
+                if (inputEl) {
+                    if (isValid) {
+                        inputEl.classList.remove('is-invalid');
+                        inputEl.classList.add('is-valid');
+                    } else {
+                        inputEl.classList.remove('is-valid');
+                        inputEl.classList.add('is-invalid');
+                        allOk = false;
+                    }
+                }
+                if (errorEl) {
+                    if (isValid) {
+                        errorEl.classList.remove('show');
+                    } else {
+                        errorEl.innerHTML = errMsg;
+                        errorEl.classList.add('show');
+                    }
+                }
+            }
+        } else {
+            // Not changed, clear styling
+            if (inputEl) inputEl.classList.remove('is-valid', 'is-invalid');
+            if (errorEl) errorEl.classList.remove('show');
+        }
+    }
+
+    if (!allOk) return;
 
     const btn = document.getElementById('saveEditBtn');
     btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving…';
 
     try {
         const payload = {
-            facultyName: name,
-            qualification: document.getElementById('e-role').value,
-            department: dept,
-            mobileNumber: phone,
-            alternateMobile: altPhone || null,
-            collegeEmail: email,
-            personalEmail,
-            fatherName: father,
-            motherName: mother,
-            tcsCode: tcs || null,
-            aadhaarNumber: aadhaar,
-            panNumber: pan || null,
-            bankName,
-            bankAccount: bank,
-            ifscCode: ifsc,
-            experience:  parseInt(document.getElementById('e-exp').value) || 0,
-            status:      document.getElementById('e-status').value,
-            availability: document.getElementById('e-avail').value
+            facultyName: currentEditData['e-name'],
+            qualification: currentEditData['e-role'],
+            department: currentEditData['e-dept'],
+            mobileNumber: currentEditData['e-phone'],
+            alternateMobile: currentEditData['e-alt-phone'] || null,
+            collegeEmail: currentEditData['e-email'],
+            personalEmail: currentEditData['e-personal-email'],
+            fatherName: currentEditData['e-father'],
+            motherName: currentEditData['e-mother'],
+            tcsCode: currentEditData['e-tcs'] || null,
+            aadhaarNumber: currentEditData['e-aadhaar'],
+            panNumber: currentEditData['e-pan'] || null,
+            bankName: currentEditData['e-bank-name'],
+            bankAccount: currentEditData['e-bank'],
+            ifscCode: currentEditData['e-ifsc'],
+            experience: currentEditData['e-exp'],
+            status: currentEditData['e-status'],
+            availability: currentEditData['e-avail']
         };
         const res = await apiFetch(`${API.staff}/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
         if (res.success) {

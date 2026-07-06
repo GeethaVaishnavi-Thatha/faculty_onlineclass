@@ -1,5 +1,8 @@
 document.addEventListener("DOMContentLoaded", () => {
-    const API = "https://faculty-onlineclass.onrender.com/api/faculty";
+    const IS_LOCAL = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+    const API = IS_LOCAL
+        ? 'http://localhost:8000/api/faculty'
+        : 'https://faculty-onlineclass.onrender.com/api/faculty';
 
     const $ = id => document.getElementById(id);
     const form = $("registrationForm");

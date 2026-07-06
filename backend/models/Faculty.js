@@ -16,7 +16,7 @@ const facultySchema = new mongoose.Schema({
     tcsCode: { type: String, trim: true, default: null },
     aadhaarNumber: { type: String, required: true, unique: true, trim: true },
     aadhaarFile: { type: String, required: true },
-    panNumber: { type: String, trim: true, uppercase: true, sparse: true, default: null },
+    panNumber: { type: String, trim: true, uppercase: true, unique: true, sparse: true },
     panFile: { type: String, default: null },
     passportPhoto: { type: String, default: null },
     status: { type: String, enum: ['Active', 'Inactive'], default: 'Active' },

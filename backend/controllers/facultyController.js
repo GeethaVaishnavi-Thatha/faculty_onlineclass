@@ -54,7 +54,7 @@ const createFaculty = async (req, res) => {
             tcsCode: tcsCode && tcsCode.trim() ? tcsCode.trim() : null,
             aadhaarNumber,
             aadhaarFile: req.files['aadhaarFile'][0].filename,
-            panNumber: panNumber && panNumber.trim() ? panNumber.trim() : null,
+            panNumber: panNumber && panNumber.trim() ? panNumber.trim() : undefined,
             panFile: req.files && req.files['panFile'] ? req.files['panFile'][0].filename : null,
             passportPhoto: req.files && req.files['passportPhoto'] ? req.files['passportPhoto'][0].filename : null
         });

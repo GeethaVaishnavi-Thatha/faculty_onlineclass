@@ -390,15 +390,21 @@ async function editStaff(id) {
         const d = res.data;
 
         document.getElementById('edit-staff-id').value = id;
-        document.getElementById('e-name').value    = d.facultyName;
-        document.getElementById('e-role').value    = d.qualification;
+        document.getElementById('e-name').value    = d.facultyName || '';
+        document.getElementById('e-role').value    = d.qualification || 'B.Tech';
         document.getElementById('e-dept').value    = d.department || '';
-        document.getElementById('e-phone').value   = d.mobileNumber;
-        document.getElementById('e-email').value   = d.collegeEmail;
-        document.getElementById('e-dob').value     = '';
-        document.getElementById('e-address').value = '';
-        document.getElementById('e-bank').value    = d.bankAccount;
-        document.getElementById('e-ifsc').value    = d.ifscCode;
+        document.getElementById('e-phone').value   = d.mobileNumber || '';
+        document.getElementById('e-alt-phone').value = d.alternateMobile || '';
+        document.getElementById('e-email').value   = d.collegeEmail || '';
+        document.getElementById('e-personal-email').value = d.personalEmail || '';
+        document.getElementById('e-father').value   = d.fatherName || '';
+        document.getElementById('e-mother').value   = d.motherName || '';
+        document.getElementById('e-tcs').value      = d.tcsCode || '';
+        document.getElementById('e-aadhaar').value  = d.aadhaarNumber || '';
+        document.getElementById('e-pan').value      = d.panNumber || '';
+        document.getElementById('e-bank-name').value = d.bankName || '';
+        document.getElementById('e-bank').value    = d.bankAccount || '';
+        document.getElementById('e-ifsc').value    = d.ifscCode || '';
         document.getElementById('e-exp').value     = d.experience || 0;
         document.getElementById('e-status').value  = d.status || 'Active';
         document.getElementById('e-avail').value   = d.availability || 'Available';
@@ -415,15 +421,28 @@ document.getElementById('saveEditBtn').addEventListener('click', async () => {
     const name  = document.getElementById('e-name').value.trim();
     const dept  = document.getElementById('e-dept').value.trim();
     const phone = document.getElementById('e-phone').value.trim();
+    const altPhone = document.getElementById('e-alt-phone').value.trim();
     const email = document.getElementById('e-email').value.trim();
+    const personalEmail = document.getElementById('e-personal-email').value.trim();
+    const father = document.getElementById('e-father').value.trim();
+    const mother = document.getElementById('e-mother').value.trim();
+    const tcs = document.getElementById('e-tcs').value.trim();
+    const aadhaar = document.getElementById('e-aadhaar').value.trim();
+    const pan = document.getElementById('e-pan').value.trim().toUpperCase();
+    const bankName = document.getElementById('e-bank-name').value.trim();
     const bank  = document.getElementById('e-bank').value.trim();
     const ifsc  = document.getElementById('e-ifsc').value.trim().toUpperCase();
 
     let ok = true;
     ok = validateField('e-name',  'e-name-err',  name.length >= 3,                            'Required.')                       && ok;
     ok = validateField('e-dept',  'e-dept-err',  dept.length > 0,                             'Required.')                       && ok;
-    ok = validateField('e-phone', 'e-phone-err', /^[6-9]\d{9}$/.test(phone),                  'Valid 10-digit number required.')  && ok;
-    ok = validateField('e-email', 'e-email-err', /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email),    'Valid email required.')            && ok;
+    ok = validateField('e-phone', 'e-phone-err', /^[6-9]d{9}$/.test(phone),                  'Valid 10-digit number required.')  && ok;
+    ok = validateField('e-email', 'e-email-err', /^[^s@]+@[^s@]+.[^s@]+$/.test(email),    'Valid email required.')            && ok;
+    ok = validateField('e-personal-email', 'e-personal-email-err', /^[^s@]+@[^s@]+.[^s@]+$/.test(personalEmail), 'Valid email required.') && ok;
+    ok = validateField('e-father', 'e-father-err', father.length > 0,                         'Required.')                       && ok;
+    ok = validateField('e-mother', 'e-mother-err', mother.length > 0,                         'Required.')                       && ok;
+    ok = validateField('e-aadhaar', 'e-aadhaar-err', /^d{12}$/.test(aadhaar),                 'Valid 12-digit Aadhaar required.') && ok;
+    ok = validateField('e-bank-name', 'e-bank-name-err', bankName.length > 0,                 'Required.')                       && ok;
     ok = validateField('e-bank',  'e-bank-err',  bank.length > 0,                             'Required.')                       && ok;
     ok = validateField('e-ifsc',  'e-ifsc-err',  /^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifsc),       'Valid IFSC required.')             && ok;
     if (!ok) return;
@@ -437,7 +456,15 @@ document.getElementById('saveEditBtn').addEventListener('click', async () => {
             qualification: document.getElementById('e-role').value,
             department: dept,
             mobileNumber: phone,
+            alternateMobile: altPhone || null,
             collegeEmail: email,
+            personalEmail,
+            fatherName: father,
+            motherName: mother,
+            tcsCode: tcs || null,
+            aadhaarNumber: aadhaar,
+            panNumber: pan || null,
+            bankName,
             bankAccount: bank,
             ifscCode: ifsc,
             experience:  parseInt(document.getElementById('e-exp').value) || 0,
@@ -876,7 +903,7 @@ function generateInvoicePDF(examDate, staff, invoiceData) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
-    const collegeName = localStorage.getItem('cfg-college') || 'Sri Venkateswara College (Autonomous)';
+    const collegeName = localStorage.getItem('cfg-college') || 'Potti Sriramulu Chalavadi Mallikarjuna Rao College of Engineering and Technology';
     const dateStr = new Date(examDate).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
     // Header

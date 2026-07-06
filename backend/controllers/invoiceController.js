@@ -186,7 +186,7 @@ const downloadInvoiceExcel = async (req, res) => {
         // Title rows
         const examDateStr = new Date(invoice.examDate).toLocaleDateString('en-IN');
         sheet.mergeCells('A1:F1');
-        sheet.getCell('A1').value     = 'SRI VENKATESWARA COLLEGE (Autonomous)';
+        sheet.getCell('A1').value     = 'POTTI SRIRAMULU CHALAVADI MALLIKARJUNA RAO COLLEGE OF ENGINEERING AND TECHNOLOGY';
         sheet.getCell('A1').font      = { bold: true, size: 14 };
         sheet.getCell('A1').alignment = { horizontal: 'center' };
 

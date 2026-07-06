@@ -1,5 +1,5 @@
 const Invoice   = require('../models/Invoice');
-const ExamStaff = require('../models/ExamStaff');
+const Faculty   = require('../models/Faculty');
 const ExcelJS   = require('exceljs');
 
 // ─── GENERATE STATEMENT (fetch staff for a given exam date) ───────────────
@@ -13,12 +13,20 @@ const generateStatement = async (req, res) => {
         if (!examDate) return res.status(400).json({ success: false, message: 'examDate query param required.' });
 
         // Get all active staff for the statement
-        const staff = await ExamStaff.find({ status: 'Active' })
-            .sort({ name: 1 })
-            .select('staffId name role phone bankAccount')
+        const staff = await Faculty.find({ status: 'Active' })
+            .sort({ facultyName: 1 })
+            .select('regId facultyName qualification mobileNumber bankAccount')
             .lean();
 
-        res.status(200).json({ success: true, data: staff, examDate });
+        const mapped = staff.map(s => ({
+            staffId:       s.regId,
+            name:          s.facultyName,
+            role:          s.qualification,
+            phone:         s.mobileNumber,
+            accountNumber: s.bankAccount
+        }));
+
+        res.status(200).json({ success: true, data: mapped, examDate });
     } catch (error) {
         console.error('generateStatement error:', error.message);
         res.status(500).json({ success: false, message: 'Server error: ' + error.message });

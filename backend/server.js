@@ -5,7 +5,6 @@ const path = require('path');
 const fs = require('fs');
 const connectDB = require('./db');
 const facultyRoutes      = require('./routes/facultyRoutes');
-const examStaffRoutes    = require('./routes/examStaffRoutes');
 const invoiceRoutes      = require('./routes/invoiceRoutes');
 const invigilationRoutes = require('./routes/invigilationRoutes');
 
@@ -58,7 +57,6 @@ connectDB();
 app.use('/api/faculty',      facultyRoutes);
 
 // ── Admin Dashboard routes ────────────────────────────────────────────────
-app.use('/api/exam-staff',   examStaffRoutes);
 app.use('/api/invoices',     invoiceRoutes);
 app.use('/api/invigilation', invigilationRoutes);
 

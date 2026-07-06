@@ -2,7 +2,16 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const path = require('path');
-const { createFaculty, getAllFaculty, getFacultyById, updateFaculty, deleteFaculty, downloadExcel } = require('../controllers/facultyController');
+const { 
+    createFaculty, 
+    getAllFaculty, 
+    getFacultyById, 
+    updateFaculty, 
+    deleteFaculty, 
+    downloadExcel,
+    getFacultyStats,
+    getAllFacultyFull
+} = require('../controllers/facultyController');
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -50,6 +59,8 @@ const cpUpload = upload.fields([
 
 router.post('/', cpUpload, createFaculty);
 router.get('/', getAllFaculty);
+router.get('/stats', getFacultyStats);
+router.get('/all', getAllFacultyFull);
 router.get('/download/excel', downloadExcel);
 router.get('/:id', getFacultyById);
 router.put('/:id', cpUpload, updateFaculty);

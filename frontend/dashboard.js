@@ -14,7 +14,7 @@ const BASE_URL  = IS_LOCAL
     : 'https://faculty-onlineclass.onrender.com'; // Render production
 
 const API = {
-    staff:        `${BASE_URL}/api/exam-staff`,
+    staff:        `${BASE_URL}/api/faculty`,
     invoices:     `${BASE_URL}/api/invoices`,
     invigilation: `${BASE_URL}/api/invigilation`
 };
@@ -59,7 +59,6 @@ if (localStorage.getItem('sidebarCollapsed') === 'true') {
 // ─── ROUTER ──────────────────────────────────────────────────────────────────
 const PAGE_LABELS = {
     'dashboard':    'Dashboard',
-    'staff-reg':    'Faculty Registration',
     'user-details': 'User Details',
     'invigilation': 'Invigilation Chart',
     'invoice':      'Statement / Invoice',
@@ -228,77 +227,6 @@ async function initDashboard() {
 function refreshDashboard() { initDashboard(); toast('info', 'Dashboard refreshed.'); }
 
 // ═══════════════════════════════════════════════════════════════════
-// PAGE 2: STAFF REGISTRATION
-// ═══════════════════════════════════════════════════════════════════
-const staffForm = document.getElementById('staffForm');
-
-staffForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    const name  = document.getElementById('sf-name').value.trim();
-    const role  = document.getElementById('sf-role').value;
-    const dept  = document.getElementById('sf-dept').value.trim();
-    const phone = document.getElementById('sf-phone').value.trim();
-    const email = document.getElementById('sf-email').value.trim();
-    const bank  = document.getElementById('sf-bank').value.trim();
-    const ifsc  = document.getElementById('sf-ifsc').value.trim().toUpperCase();
-
-    let ok = true;
-    ok = validateField('sf-name',  'sf-name-err',  name.length >= 3,                          'Name must be at least 3 characters.') && ok;
-    ok = validateField('sf-role',  'sf-role-err',  role !== '',                                'Please select a role.')               && ok;
-    ok = validateField('sf-dept',  'sf-dept-err',  dept.length > 0,                           'Department is required.')             && ok;
-    ok = validateField('sf-phone', 'sf-phone-err', /^[6-9]\d{9}$/.test(phone),                'Enter a valid 10-digit phone number.') && ok;
-    ok = validateField('sf-email', 'sf-email-err', /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email),  'Enter a valid email address.')        && ok;
-    ok = validateField('sf-bank',  'sf-bank-err',  bank.length > 0,                           'Account number is required.')         && ok;
-    ok = validateField('sf-ifsc',  'sf-ifsc-err',  /^[A-Z]{4}0[A-Z0-9]{6}$/.test(ifsc),     'Enter a valid IFSC code.')             && ok;
-
-    if (!ok) return;
-
-    const btn = document.getElementById('staffSubmitBtn');
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting…';
-
-    try {
-        const payload = {
-            name, role, department: dept, phone, email,
-            dateOfBirth: document.getElementById('sf-dob').value || null,
-            address:     document.getElementById('sf-address').value.trim() || null,
-            bankAccount: bank,
-            ifscCode:    ifsc,
-            experience:  parseInt(document.getElementById('sf-exp').value) || 0
-        };
-
-        const res = await apiFetch(API.staff, { method: 'POST', body: JSON.stringify(payload) });
-        if (res.success) {
-            toast('success', 'Staff registered successfully!');
-            staffForm.reset();
-            document.querySelectorAll('#staffForm .form-control').forEach(el => el.classList.remove('is-valid', 'is-invalid'));
-        } else {
-            toast('error', res.message || 'Registration failed.');
-        }
-    } catch (err) {
-        toast('error', err.message || 'Network error. Please try again.');
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Submit Registration';
-    }
-});
-
-document.getElementById('staffResetBtn').addEventListener('click', () => {
-    staffForm.reset();
-    document.querySelectorAll('#staffForm .form-control').forEach(el => el.classList.remove('is-valid', 'is-invalid'));
-    document.querySelectorAll('#staffForm .form-error').forEach(el => el.classList.remove('show'));
-});
-
-// Auto-format IFSC to uppercase
-document.getElementById('sf-ifsc').addEventListener('input', e => {
-    e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-});
-document.getElementById('sf-phone').addEventListener('input', e => {
-    e.target.value = e.target.value.replace(/\D/g, '');
-});
-
-// ═══════════════════════════════════════════════════════════════════
 // PAGE 3: USER DETAILS
 // ═══════════════════════════════════════════════════════════════════
 let udPage = 1, udLimit = 10, udSort = 'registrationDate', udOrder = 'desc', udSearch = '', udRole = 'All', udStatus = 'All';
@@ -306,37 +234,69 @@ let udPage = 1, udLimit = 10, udSort = 'registrationDate', udOrder = 'desc', udS
 async function initUserDetails() { await loadUserDetails(); }
 
 async function loadUserDetails() {
-    const params = new URLSearchParams({
-        page: udPage, limit: udLimit,
-        sort: udSort, order: udOrder,
-        search: udSearch,
-        role:   udRole   !== 'All' ? udRole   : '',
-        status: udStatus !== 'All' ? udStatus : ''
-    });
-
     const tbody = document.getElementById('udTableBody');
     tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:30px"><div class="spinner" style="margin:0 auto"></div></td></tr>`;
 
     try {
-        const res = await apiFetch(`${API.staff}?${params}`);
+        const res = await apiFetch(API.staff);
         if (!res.success) { toast('error', res.message); return; }
 
-        const { data, pagination } = res;
-        document.getElementById('ud-subtitle').textContent = `${pagination.total} registered staff member(s)`;
+        const allData = res.data || [];
 
-        if (!data.length) {
+        // 1. Client-side filtering
+        let filtered = allData.filter(s => {
+            const nameMatch = !udSearch || (s.facultyName || '').toLowerCase().includes(udSearch.toLowerCase());
+            const regIdMatch = !udSearch || (s.regId || '').toLowerCase().includes(udSearch.toLowerCase());
+            const phoneMatch = !udSearch || (s.mobileNumber || '').includes(udSearch);
+            const matchesSearch = nameMatch || regIdMatch || phoneMatch;
+
+            const matchesRole   = udRole === 'All' || s.qualification === udRole;
+            const matchesStatus = udStatus === 'All' || s.status === udStatus;
+
+            return matchesSearch && matchesRole && matchesStatus;
+        });
+
+        // 2. Client-side sorting
+        filtered.sort((a, b) => {
+            let valA = a[udSort];
+            let valB = b[udSort];
+
+            if (udSort === 'name') { valA = a.facultyName; valB = b.facultyName; }
+            if (udSort === 'role') { valA = a.qualification; valB = b.qualification; }
+            if (udSort === 'phone') { valA = a.mobileNumber; valB = b.mobileNumber; }
+            if (udSort === 'email') { valA = a.collegeEmail; valB = b.collegeEmail; }
+
+            valA = valA || '';
+            valB = valB || '';
+
+            if (typeof valA === 'string') {
+                return udOrder === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+            } else {
+                return udOrder === 'asc' ? (valA - valB) : (valB - valA);
+            }
+        });
+
+        // 3. Client-side pagination
+        const total = filtered.length;
+        const totalPages = Math.ceil(total / udLimit);
+        const startIdx = (udPage - 1) * udLimit;
+        const pageData = filtered.slice(startIdx, startIdx + udLimit);
+
+        document.getElementById('ud-subtitle').textContent = `${total} registered faculty member(s)`;
+
+        if (!total) {
             tbody.innerHTML = '';
             document.getElementById('udEmpty').style.display = 'block';
         } else {
             document.getElementById('udEmpty').style.display = 'none';
-            tbody.innerHTML = data.map((s, i) => `
+            tbody.innerHTML = pageData.map((s, i) => `
                 <tr>
-                    <td style="color:var(--text-muted)">${(udPage - 1) * udLimit + i + 1}</td>
-                    <td><strong>${s.name}</strong></td>
-                    <td><span class="badge badge-purple">${s.role}</span></td>
-                    <td>${s.phone}</td>
-                    <td style="color:var(--text-secondary);font-size:.8rem">${s.email}</td>
-                    <td style="font-size:.8rem;color:var(--text-muted)">${s.bankAccount}</td>
+                    <td style="color:var(--text-muted)">${startIdx + i + 1}</td>
+                    <td><strong>${s.facultyName}</strong></td>
+                    <td><span class="badge badge-purple">${s.qualification || '—'}</span></td>
+                    <td>${s.mobileNumber || '—'}</td>
+                    <td style="color:var(--text-secondary);font-size:.8rem">${s.collegeEmail || '—'}</td>
+                    <td style="font-size:.8rem;color:var(--text-muted)">${s.bankAccount || '—'}</td>
                     <td style="font-size:.78rem;color:var(--text-muted)">${fmtDateTime(s.registrationDate)}</td>
                     <td>
                         <div class="table-actions">
@@ -348,7 +308,12 @@ async function loadUserDetails() {
                 </tr>`).join('');
         }
 
-        renderPagination('udPagination', pagination, (p) => { udPage = p; loadUserDetails(); });
+        renderPagination('udPagination', {
+            total,
+            page: udPage,
+            limit: udLimit,
+            totalPages
+        }, (p) => { udPage = p; loadUserDetails(); });
     } catch (err) {
         toast('error', 'Failed to load user details: ' + err.message);
     }
@@ -368,12 +333,12 @@ document.getElementById('udExcelBtn').addEventListener('click', async () => {
     const btn = document.getElementById('udExcelBtn');
     btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating…';
     try {
-        const res = await fetch(`${API.staff}/export/excel`);
+        const res = await fetch(`${API.staff}/download/excel`);
         if (!res.ok) { toast('error', 'Excel export failed.'); return; }
         const blob = await res.blob();
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = `Exam_Staff_${Date.now()}.xlsx`;
+        a.download = `Faculty_Records_${Date.now()}.xlsx`;
         a.click(); a.remove();
         toast('success', 'Excel downloaded successfully!');
     } catch { toast('error', 'Download failed.'); }
@@ -388,11 +353,11 @@ async function viewStaff(id) {
         const d = res.data;
         document.getElementById('viewStaffBody').innerHTML = `
             <div class="detail-grid">
-                <div class="detail-item"><label>Name</label><span>${d.name}</span></div>
-                <div class="detail-item"><label>Role</label><span><span class="badge badge-purple">${d.role}</span></span></div>
+                <div class="detail-item"><label>Name</label><span>${d.facultyName}</span></div>
+                <div class="detail-item"><label>Role</label><span><span class="badge badge-purple">${d.qualification}</span></span></div>
                 <div class="detail-item"><label>Department</label><span>${d.department || '—'}</span></div>
-                <div class="detail-item"><label>Phone</label><span>${d.phone}</span></div>
-                <div class="detail-item"><label>Email</label><span>${d.email}</span></div>
+                <div class="detail-item"><label>Phone</label><span>${d.mobileNumber}</span></div>
+                <div class="detail-item"><label>Email</label><span>${d.collegeEmail}</span></div>
                 <div class="detail-item"><label>Date of Birth</label><span>${d.dateOfBirth ? fmtDate(d.dateOfBirth) : '—'}</span></div>
                 <div class="detail-item"><label>Address</label><span>${d.address || '—'}</span></div>
                 <div class="detail-item"><label>Bank Account</label><span>${d.bankAccount}</span></div>
@@ -400,8 +365,18 @@ async function viewStaff(id) {
                 <div class="detail-item"><label>Experience</label><span>${d.experience || 0} years</span></div>
                 <div class="detail-item"><label>Status</label><span><span class="badge ${d.status === 'Active' ? 'badge-green' : 'badge-red'}">${d.status}</span></span></div>
                 <div class="detail-item"><label>Availability</label><span>${d.availability}</span></div>
-                <div class="detail-item"><label>Staff ID</label><span style="font-size:.78rem;color:var(--text-muted)">${d.staffId}</span></div>
+                <div class="detail-item"><label>Reg ID</label><span style="font-size:.78rem;color:var(--text-muted)">${d.regId}</span></div>
                 <div class="detail-item"><label>Registered On</label><span>${fmtDateTime(d.registrationDate)}</span></div>
+                
+                <!-- Documents View Section -->
+                <div class="detail-item" style="grid-column: span 2; margin-top: 10px;">
+                    <label>Uploaded Documents</label>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:4px;">
+                        ${d.aadhaarFile ? `<a class="btn btn-outline btn-sm" href="${BASE_URL}/uploads/${d.aadhaarFile}" target="_blank"><i class="fa-solid fa-file-pdf"></i> Aadhaar Doc</a>` : ''}
+                        ${d.panFile ? `<a class="btn btn-outline btn-sm" href="${BASE_URL}/uploads/${d.panFile}" target="_blank"><i class="fa-solid fa-file-pdf"></i> PAN Doc</a>` : ''}
+                        ${d.passportPhoto ? `<a class="btn btn-outline btn-sm" href="${BASE_URL}/uploads/${d.passportPhoto}" target="_blank"><i class="fa-solid fa-image"></i> Passport Photo</a>` : ''}
+                    </div>
+                </div>
             </div>`;
         openModal('viewStaffModal');
     } catch (err) { toast('error', 'Failed to load details.'); }
@@ -415,18 +390,18 @@ async function editStaff(id) {
         const d = res.data;
 
         document.getElementById('edit-staff-id').value = id;
-        document.getElementById('e-name').value    = d.name;
-        document.getElementById('e-role').value    = d.role;
+        document.getElementById('e-name').value    = d.facultyName;
+        document.getElementById('e-role').value    = d.qualification;
         document.getElementById('e-dept').value    = d.department || '';
-        document.getElementById('e-phone').value   = d.phone;
-        document.getElementById('e-email').value   = d.email;
-        document.getElementById('e-dob').value     = d.dateOfBirth ? d.dateOfBirth.split('T')[0] : '';
-        document.getElementById('e-address').value = d.address || '';
+        document.getElementById('e-phone').value   = d.mobileNumber;
+        document.getElementById('e-email').value   = d.collegeEmail;
+        document.getElementById('e-dob').value     = '';
+        document.getElementById('e-address').value = '';
         document.getElementById('e-bank').value    = d.bankAccount;
         document.getElementById('e-ifsc').value    = d.ifscCode;
         document.getElementById('e-exp').value     = d.experience || 0;
-        document.getElementById('e-status').value  = d.status;
-        document.getElementById('e-avail').value   = d.availability;
+        document.getElementById('e-status').value  = d.status || 'Active';
+        document.getElementById('e-avail').value   = d.availability || 'Available';
 
         document.querySelectorAll('#editStaffModal .form-control').forEach(el => el.classList.remove('is-valid', 'is-invalid'));
         document.querySelectorAll('#editStaffModal .form-error').forEach(el => el.classList.remove('show'));
@@ -458,11 +433,13 @@ document.getElementById('saveEditBtn').addEventListener('click', async () => {
 
     try {
         const payload = {
-            name, role: document.getElementById('e-role').value,
-            department: dept, phone, email,
-            dateOfBirth: document.getElementById('e-dob').value || null,
-            address:     document.getElementById('e-address').value.trim() || null,
-            bankAccount: bank, ifscCode: ifsc,
+            facultyName: name,
+            qualification: document.getElementById('e-role').value,
+            department: dept,
+            mobileNumber: phone,
+            collegeEmail: email,
+            bankAccount: bank,
+            ifscCode: ifsc,
             experience:  parseInt(document.getElementById('e-exp').value) || 0,
             status:      document.getElementById('e-status').value,
             availability: document.getElementById('e-avail').value

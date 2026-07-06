@@ -19,6 +19,10 @@ const facultySchema = new mongoose.Schema({
     panNumber: { type: String, trim: true, uppercase: true, sparse: true, default: null },
     panFile: { type: String, default: null },
     passportPhoto: { type: String, default: null },
+    status: { type: String, enum: ['Active', 'Inactive'], default: 'Active' },
+    availability: { type: String, enum: ['Available', 'Unavailable', 'On Leave'], default: 'Available' },
+    experience: { type: Number, default: 0 },
+    department: { type: String, default: 'AI & DS' },
     registrationDate: { type: Date, default: Date.now }
 });
 

@@ -117,7 +117,8 @@ const updateFaculty = async (req, res) => {
             collegeEmail, personalEmail,
             bankAccount, bankName, ifscCode,
             fatherName, motherName, qualification, tcsCode,
-            aadhaarNumber, panNumber
+            aadhaarNumber, panNumber,
+            status, availability, experience, department
         } = req.body;
 
         const faculty = await Faculty.findById(req.params.id);
@@ -150,6 +151,11 @@ const updateFaculty = async (req, res) => {
         faculty.tcsCode = tcsCode && tcsCode.trim() ? tcsCode.trim() : null;
         faculty.aadhaarNumber = aadhaarNumber || faculty.aadhaarNumber;
         faculty.panNumber = panNumber && panNumber.trim() ? panNumber.trim() : null;
+        
+        if (status) faculty.status = status;
+        if (availability) faculty.availability = availability;
+        if (experience !== undefined) faculty.experience = Number(experience);
+        if (department) faculty.department = department;
 
         if (req.files) {
             if (req.files['aadhaarFile']) faculty.aadhaarFile = req.files['aadhaarFile'][0].filename;
@@ -268,4 +274,70 @@ const downloadExcel = async (req, res) => {
     }
 };
 
-module.exports = { createFaculty, getAllFaculty, getFacultyById, updateFaculty, deleteFaculty, downloadExcel };
+const getFacultyStats = async (req, res) => {
+    try {
+        const [total, active, inactive, available] = await Promise.all([
+            Faculty.countDocuments(),
+            Faculty.countDocuments({ status: 'Active' }),
+            Faculty.countDocuments({ status: 'Inactive' }),
+            Faculty.countDocuments({ status: 'Active', availability: 'Available' })
+        ]);
+
+        const roleBreakdown = await Faculty.aggregate([
+            { $group: { _id: '$qualification', count: { $sum: 1 } } },
+            { $sort: { count: -1 } }
+        ]);
+
+        const recent = await Faculty.find()
+            .sort({ registrationDate: -1 })
+            .limit(5)
+            .select('facultyName qualification department registrationDate')
+            .lean();
+
+        const mappedRecent = recent.map(r => ({
+            name: r.facultyName,
+            role: r.qualification,
+            department: r.department,
+            registrationDate: r.registrationDate
+        }));
+
+        res.status(200).json({
+            success: true,
+            data: {
+                total,
+                active,
+                inactive,
+                available,
+                roleBreakdown,
+                recent: mappedRecent
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server error: ' + error.message });
+    }
+};
+
+const getAllFacultyFull = async (req, res) => {
+    try {
+        const { availability, qualification } = req.query;
+        const query = { status: 'Active' };
+        if (availability && availability !== 'All') query.availability = availability;
+        if (qualification && qualification !== 'All') query.qualification = qualification;
+
+        const data = await Faculty.find(query).sort({ facultyName: 1 }).lean();
+        res.status(200).json({ success: true, data });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Server error: ' + error.message });
+    }
+};
+
+module.exports = { 
+    createFaculty, 
+    getAllFaculty, 
+    getFacultyById, 
+    updateFaculty, 
+    deleteFaculty, 
+    downloadExcel,
+    getFacultyStats,
+    getAllFacultyFull
+};

@@ -1,5 +1,5 @@
 const InvigilationChart = require('../models/InvigilationChart');
-const ExamStaff         = require('../models/ExamStaff');
+const Faculty           = require('../models/Faculty');
 const ExcelJS           = require('exceljs');
 
 // ─── GET STAFF FOR ALLOCATION ─────────────────────────────────────────────
@@ -11,16 +11,26 @@ const getStaffForAllocation = async (req, res) => {
     try {
         const { role, department, availability } = req.query;
         const query = { status: 'Active' };
-        if (role         && role         !== 'All') query.role         = role;
-        if (department   && department   !== 'All') query.department   = department;
-        if (availability && availability !== 'All') query.availability = availability;
+        if (role         && role         !== 'All') query.qualification = role;
+        if (department   && department   !== 'All') query.department    = department;
+        if (availability && availability !== 'All') query.availability  = availability;
 
-        const staff = await ExamStaff.find(query)
-            .sort({ name: 1 })
-            .select('staffId name role department experience availability phone')
+        const staff = await Faculty.find(query)
+            .sort({ facultyName: 1 })
+            .select('regId facultyName qualification department experience availability mobileNumber')
             .lean();
 
-        res.status(200).json({ success: true, data: staff });
+        const mapped = staff.map(s => ({
+            staffId:    s.regId,
+            name:       s.facultyName,
+            role:       s.qualification,
+            department: s.department,
+            experience: s.experience,
+            availability: s.availability,
+            phone:      s.mobileNumber
+        }));
+
+        res.status(200).json({ success: true, data: mapped });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Server error: ' + error.message });
     }
@@ -148,10 +158,10 @@ const autoAllocate = async (req, res) => {
         if (!halls.length) return res.status(400).json({ success: false, message: 'At least one hall required.' });
 
         const query = { status: 'Active', availability: 'Available' };
-        if (role       && role       !== 'All') query.role       = role;
-        if (department && department !== 'All') query.department = department;
+        if (role       && role       !== 'All') query.qualification = role;
+        if (department && department !== 'All') query.department    = department;
 
-        const staff = await ExamStaff.find(query).sort({ experience: -1, name: 1 }).lean();
+        const staff = await Faculty.find(query).sort({ experience: -1, facultyName: 1 }).lean();
 
         if (!staff.length) {
             return res.status(200).json({
@@ -160,6 +170,16 @@ const autoAllocate = async (req, res) => {
                 allocations: []
             });
         }
+
+        const mappedStaff = staff.map(s => ({
+            staffId:    s.regId,
+            name:       s.facultyName,
+            role:       s.qualification,
+            department: s.department,
+            experience: s.experience,
+            availability: s.availability,
+            phone:      s.mobileNumber
+        }));
 
         const allocations = [];
         const assigned    = new Set();
@@ -170,8 +190,8 @@ const autoAllocate = async (req, res) => {
                 for (let slot = 0; slot < parseInt(staffPerHall); slot++) {
                     // Find next unassigned staff
                     let attempts = 0;
-                    while (staffIdx < staff.length && attempts < staff.length) {
-                        const s = staff[staffIdx % staff.length];
+                    while (staffIdx < mappedStaff.length && attempts < mappedStaff.length) {
+                        const s = mappedStaff[staffIdx % mappedStaff.length];
                         staffIdx++;
                         attempts++;
                         if (!assigned.has(s.staffId)) {
@@ -194,7 +214,7 @@ const autoAllocate = async (req, res) => {
             }
         }
 
-        const unassigned = staff.filter(s => !assigned.has(s.staffId));
+        const unassigned = mappedStaff.filter(s => !assigned.has(s.staffId));
 
         res.status(200).json({
             success:     true,

@@ -19,7 +19,7 @@ const generateStatement = async (req, res) => {
             .lean();
 
         const mapped = staff.map(s => ({
-            staffId:       s.regId,
+            staffId:       s._id.toString(),
             name:          s.facultyName,
             role:          s.qualification,
             phone:         s.mobileNumber,

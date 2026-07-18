@@ -605,10 +605,9 @@ document.getElementById('confirmDeleteBtn').addEventListener('click', async () =
 });
 
 // ═══════════════════════════════════════════════════════════════════
-// PAGE 4: INVIGILATION CHART
+// PAGE 4: INVIGILATION CHART  (persistent via /api/duty)
 // ═══════════════════════════════════════════════════════════════════
-let invigAllStaff      = [];  // all staff from API
-let invigChartData     = {};  // _id -> { shift, amount }
+let invigAllStaff      = [];
 let invigFilteredStaff = [];
 let invigPage = 1, invigLimit = 10;
 let invigSearch = '', invigRole = 'All';
@@ -623,15 +622,9 @@ async function loadInvigChart() {
     document.getElementById('invigEmpty').style.display = 'none';
 
     try {
-        const res = await apiFetch(API.staff);
+        const res = await apiFetch(`${BASE_URL}/api/duty`);
         if (!res.success) { toast('error', res.message); return; }
         invigAllStaff = res.data || [];
-        // Initialise chart data for any new staff
-        invigAllStaff.forEach(s => {
-            if (!invigChartData[s._id]) {
-                invigChartData[s._id] = { shift: '', amount: 0 };
-            }
-        });
         invigPage = 1;
         renderInvigChart();
     } catch (err) { toast('error', 'Failed to load faculty: ' + err.message); }
@@ -663,13 +656,13 @@ function renderInvigChart() {
 
     const start = (invigPage - 1) * invigLimit;
     const slice = invigFilteredStaff.slice(start, start + invigLimit);
-
     const SHIFTS = ['Morning (8AM–12PM)', 'Afternoon (12PM–4PM)', 'Evening (4PM–8PM)'];
 
     tbody.innerHTML = slice.map((s, i) => {
-        const d = invigChartData[s._id] || { shift: '', amount: 0 };
+        const shift  = s.shift  || '';
+        const amount = s.amount || 0;
         const shiftOpts = `<option value="">— Select Shift —</option>` +
-            SHIFTS.map(sh => `<option value="${sh}" ${d.shift === sh ? 'selected' : ''}>${sh}</option>`).join('');
+            SHIFTS.map(sh => `<option value="${sh}" ${shift === sh ? 'selected' : ''}>${sh}</option>`).join('');
 
         return `
         <tr>
@@ -680,18 +673,20 @@ function renderInvigChart() {
             <td style="font-size:.8rem;color:var(--text-muted)">${s.bankAccount || '—'}</td>
             <td>
                 <select class="filter-select" style="padding:5px 8px;font-size:.78rem;min-width:160px"
-                    onchange="invigSetShift('${s._id}', this.value)">${shiftOpts}</select>
+                    onchange="invigSetShift('${s._id}', this.value, this)">${shiftOpts}</select>
             </td>
             <td>
-                <div style="display:flex;flex-direction:column;gap:4px;min-width:140px">
-                    <span style="font-weight:700;font-size:.92rem;color:var(--purple-700)" id="invig-amt-${s._id}">₹${d.amount.toLocaleString()}</span>
+                <div style="display:flex;flex-direction:column;gap:5px;min-width:150px">
+                    <span style="font-weight:700;font-size:.95rem;color:var(--purple-700)" id="invig-amt-${s._id}">₹${Number(amount).toLocaleString('en-IN')}</span>
                     <div style="display:flex;gap:4px">
-                        <input type="number" id="invig-add-${s._id}" min="0" placeholder="Add ₹"
-                            style="width:80px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:.78rem;outline:none"
-                            onkeydown="if(event.key==='Enter'){invigAddAmount('${s._id}')}"
+                        <input type="number" id="invig-add-${s._id}" min="1" placeholder="Add ₹"
+                            style="width:82px;padding:4px 8px;border:1.5px solid var(--border);border-radius:6px;font-size:.78rem;outline:none;transition:border-color .2s"
+                            onfocus="this.style.borderColor='var(--purple-500)'"
+                            onblur="this.style.borderColor='var(--border)'"
+                            onkeydown="if(event.key==='Enter'){invigAddAmount('${s._id}','${s.shift || ''}',this)}"
                         >
-                        <button onclick="invigAddAmount('${s._id}')"
-                            style="padding:4px 10px;background:var(--purple-600);color:#fff;border:none;border-radius:6px;font-size:.75rem;font-weight:600;cursor:pointer;white-space:nowrap">
+                        <button onclick="invigAddAmount('${s._id}', document.getElementById('invig-shift-sel-${s._id}') ? document.getElementById('invig-shift-sel-${s._id}').value : '${s.shift || ''}')"
+                            style="padding:4px 10px;background:linear-gradient(135deg,var(--purple-600),var(--purple-500));color:#fff;border:none;border-radius:6px;font-size:.75rem;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:0 2px 6px rgba(91,33,182,.25)">
                             Add
                         </button>
                     </div>
@@ -700,32 +695,62 @@ function renderInvigChart() {
         </tr>`;
     }).join('');
 
+    // Set IDs on shift selects so Add button can read the current value
+    slice.forEach((s, i) => {
+        const row = tbody.querySelectorAll('tr')[i];
+        if (row) {
+            const sel = row.querySelector('select');
+            if (sel) sel.id = `invig-shift-sel-${s._id}`;
+        }
+    });
+
     renderPagination('invigPagination', {
         total, page: invigPage, limit: invigLimit,
         totalPages: Math.ceil(total / invigLimit)
     }, (p) => { invigPage = p; renderInvigChart(); });
 }
 
-function invigSetShift(id, value) {
-    if (!invigChartData[id]) invigChartData[id] = { shift: '', amount: 0 };
-    invigChartData[id].shift = value;
+async function invigSetShift(id, value) {
+    // Optimistically update local data
+    const rec = invigAllStaff.find(s => s._id === id);
+    if (rec) rec.shift = value;
+    try {
+        await apiFetch(`${BASE_URL}/api/duty/${id}/shift`, {
+            method: 'PUT',
+            body: JSON.stringify({ shift: value })
+        });
+    } catch (err) { toast('error', 'Failed to save shift: ' + err.message); }
 }
 
-function invigAddAmount(id) {
-    const input = document.getElementById(`invig-add-${id}`);
-    const val = parseFloat(input.value);
-    if (isNaN(val) || val <= 0) {
-        toast('warning', 'Enter a valid positive amount.');
-        return;
-    }
-    if (!invigChartData[id]) invigChartData[id] = { shift: '', amount: 0 };
-    invigChartData[id].amount += val;
-    input.value = '';
+async function invigAddAmount(id) {
+    const input  = document.getElementById(`invig-add-${id}`);
+    const selEl  = document.getElementById(`invig-shift-sel-${id}`);
+    const val    = parseFloat(input.value);
+    const shift  = selEl ? selEl.value : (invigAllStaff.find(s => s._id === id) || {}).shift || '';
 
-    // Update the displayed total without full re-render
-    const amtEl = document.getElementById(`invig-amt-${id}`);
-    if (amtEl) amtEl.textContent = `₹${invigChartData[id].amount.toLocaleString()}`;
-    toast('success', `₹${val.toLocaleString()} added successfully.`);
+    if (isNaN(val) || val <= 0) { toast('warning', 'Enter a valid positive amount.'); return; }
+    if (!shift) { toast('warning', 'Please select a shift before adding amount.'); return; }
+
+    const btn = input.nextElementSibling;
+    if (btn) { btn.disabled = true; btn.textContent = '…'; }
+
+    try {
+        const res = await apiFetch(`${BASE_URL}/api/duty/${id}/add-amount`, {
+            method: 'PUT',
+            body: JSON.stringify({ amount: val, shift })
+        });
+        if (!res.success) { toast('error', res.message); return; }
+        const rec = invigAllStaff.find(s => s._id === id);
+        if (rec) { rec.amount = res.data.amount; rec.shift = res.data.shift; }
+        const amtEl = document.getElementById(`invig-amt-${id}`);
+        if (amtEl) amtEl.textContent = `₹${Number(res.data.amount).toLocaleString('en-IN')}`;
+        input.value = '';
+        toast('success', `₹${val.toLocaleString('en-IN')} added successfully.`);
+    } catch (err) {
+        toast('error', err.message || 'Failed to add amount.');
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = 'Add'; }
+    }
 }
 
 // Search & filter listeners
@@ -792,9 +817,9 @@ function renderInvoiceTable(staff, defaultAmt, examDate) {
             <td><strong>${s.name}</strong></td>
             <td><span class="badge badge-purple">${s.role}</span></td>
             <td>${s.phone || '—'}</td>
-            <td style="font-size:.8rem">${s.bankAccount || '—'}</td>
+            <td style="font-size:.8rem">${s.accountNumber || '—'}</td>
             <td style="text-align:right">
-                <input type="number" class="amount-input" id="amt-${s._id || i}"
+                <input type="number" class="amount-input" id="amt-${s.staffId || i}"
                     value="${defaultAmt}" min="0" onchange="recalcTotal()">
             </td>
         </tr>`).join('');
@@ -829,12 +854,12 @@ document.getElementById('saveInvoiceBtn').addEventListener('click', async () => 
     }
 
     const entries = currentInvoiceStaff.map((s, i) => ({
-        staffId:       s._id || null,
+        staffId:       s.staffId || null,
         name:          s.name,
         role:          s.role,
         phone:         s.phone || '',
-        accountNumber: s.bankAccount || '',
-        amount:        parseFloat(document.getElementById(`amt-${s._id || i}`)?.value) || 0
+        accountNumber: s.accountNumber || '',
+        amount:        parseFloat(document.getElementById(`amt-${s.staffId || i}`)?.value) || 0
     }));
 
     const btn = document.getElementById('saveInvoiceBtn');
@@ -859,54 +884,147 @@ document.getElementById('saveInvoiceBtn').addEventListener('click', async () => 
 document.getElementById('printInvoiceBtn').addEventListener('click', () => {
     const examDate = document.getElementById('inv-exam-date').value;
     if (!currentInvoiceStaff.length) { toast('warning', 'No data to print.'); return; }
-    generateInvoicePDF(examDate, currentInvoiceStaff);
+    generateInvoicePDF(examDate, currentInvoiceStaff, false);
 });
 
-function generateInvoicePDF(examDate, staff, invoiceData) {
+function generateInvoicePDF(examDate, staffList, isSavedInvoice = false, invoiceNumber = '') {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const W = 210; // A4 width in mm
+    const margin = 14;
 
-    const collegeName = localStorage.getItem('cfg-college') || 'Potti Sriramulu Chalavadi Mallikarjuna Rao College of Engineering and Technology';
+    const collegeName = 'Potti Sriramulu Chalavadi Mallikarjuna Rao College of Engineering and Technology';
     const dateStr = new Date(examDate).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const genDate = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
-    // Header
-    doc.setFontSize(14); doc.setFont('helvetica', 'bold');
-    doc.text(collegeName, 105, 18, { align: 'center' });
-    doc.setFontSize(11);
-    doc.text('STATEMENT / INVOICE', 105, 26, { align: 'center' });
-    doc.setFontSize(9); doc.setFont('helvetica', 'normal');
-    doc.text(`Exam Date: ${dateStr}`, 195, 35, { align: 'right' });
+    // Header Purple Banner
+    doc.setFillColor(91, 33, 182);
+    doc.rect(0, 0, W, 30, 'F');
 
-    // Table
-    const entries = staff.map((s, i) => {
-        const amt = parseFloat(document.getElementById(`amt-${s._id || i}`)?.value) || 0;
-        return [i + 1, s.name, s.role, s.phone || '—', s.bankAccount || '—', `₹${amt.toLocaleString('en-IN')}`];
-    });
+    // College Name
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10.5);
+    doc.setTextColor(255, 255, 255);
+    const nameLines = doc.splitTextToSize(collegeName.toUpperCase(), W - 28);
+    doc.text(nameLines, W / 2, nameLines.length > 1 ? 9 : 12, { align: 'center' });
 
-    const total = entries.reduce((sum, row) => sum + parseFloat(row[5].replace(/[^0-9]/g, '') || 0), 0);
-
-    doc.autoTable({
-        head: [['S.No', 'Name', 'Role', 'Phone Number', 'Account Number', 'Amount (₹)']],
-        body: entries,
-        startY: 40,
-        theme: 'grid',
-        headStyles: { fillColor: [91, 33, 182], textColor: 255, fontStyle: 'bold', fontSize: 9 },
-        bodyStyles: { fontSize: 8.5 },
-        alternateRowStyles: { fillColor: [245, 243, 255] },
-        columnStyles: { 0: { halign: 'center', cellWidth: 12 }, 5: { halign: 'right' } },
-        foot: [['', '', '', '', 'Total Amount (₹)', `₹${total.toLocaleString('en-IN')}`]],
-        footStyles: { fillColor: [237, 233, 254], textColor: [91, 33, 182], fontStyle: 'bold' }
-    });
-
-    // Footer
-    const finalY = doc.lastAutoTable.finalY + 20;
+    // Document Title
     doc.setFontSize(8.5);
-    doc.text('Prepared By', 30, finalY + 10);
-    doc.text('Authorised Signatory', 160, finalY + 10);
-    doc.line(20, finalY + 8, 70, finalY + 8);
-    doc.line(150, finalY + 8, 200, finalY + 8);
+    doc.setFont('helvetica', 'normal');
+    doc.text('EXAM SECTION - REMUNERATION STATEMENT / INVOICE', W / 2, nameLines.length > 1 ? 23 : 21, { align: 'center' });
 
-    doc.save(`Invoice_${examDate}.pdf`);
+    // Meta details (Below Header Banner)
+    doc.setTextColor(60, 60, 60);
+    doc.setFontSize(9);
+    let metaY = 37;
+
+    if (invoiceNumber) {
+        doc.setFont('helvetica', 'bold');
+        doc.text(`Invoice No: ${invoiceNumber}`, margin, metaY);
+        doc.setFont('helvetica', 'normal');
+        metaY += 5;
+    }
+
+    doc.text(`Exam Date: ${dateStr}`, margin, metaY);
+    doc.text(`Bill Date: ${genDate}`, W - margin, metaY, { align: 'right' });
+    doc.text(`Total Staff: ${staffList.length}`, W - margin, metaY + 5, { align: 'right' });
+
+    // Horizontal Divider Line
+    doc.setDrawColor(220, 220, 220);
+    doc.setLineWidth(0.4);
+    doc.line(margin, metaY + 9, W - margin, metaY + 9);
+
+    const tableY = metaY + 13;
+
+    // Process entries
+    const entries = staffList.map((s, i) => {
+        let amt = 0;
+        if (isSavedInvoice) {
+            amt = parseFloat(s.amount) || 0;
+        } else {
+            const inputId = `amt-${s.staffId || i}`;
+            const el = document.getElementById(inputId);
+            amt = el ? parseFloat(el.value) || 0 : 0;
+        }
+        return {
+            sno: i + 1,
+            name: s.name,
+            role: s.role || '—',
+            phone: s.phone || '—',
+            accountNumber: s.accountNumber || '—',
+            amount: amt
+        };
+    });
+
+    const totalAmount = entries.reduce((sum, e) => sum + e.amount, 0);
+
+    // Render Table
+    doc.autoTable({
+        head: [['S.No', 'Name', 'Qualification', 'Phone No.', 'Bank Account No.', 'Amount (\u20b9)']],
+        body: entries.map(e => [
+            e.sno,
+            e.name,
+            e.role,
+            e.phone,
+            e.accountNumber,
+            `\u20b9${Number(e.amount).toLocaleString('en-IN')}`
+        ]),
+        startY: tableY,
+        theme: 'grid',
+        headStyles: {
+            fillColor: [91, 33, 182],
+            textColor: 255,
+            fontStyle: 'bold',
+            fontSize: 9,
+            halign: 'center'
+        },
+        bodyStyles: {
+            fontSize: 8.5,
+            valign: 'middle'
+        },
+        alternateRowStyles: {
+            fillColor: [248, 245, 255]
+        },
+        columnStyles: {
+            0: { halign: 'center', cellWidth: 12 },
+            1: { cellWidth: 38 },
+            2: { cellWidth: 26 },
+            3: { cellWidth: 26 },
+            4: { cellWidth: 38 },
+            5: { halign: 'right', cellWidth: 26, fontStyle: 'bold' }
+        },
+        foot: [['', '', '', '', 'TOTAL REMUNERATION', `\u20b9${totalAmount.toLocaleString('en-IN')}`]],
+        footStyles: {
+            fillColor: [237, 233, 254],
+            textColor: [91, 33, 182],
+            fontStyle: 'bold',
+            fontSize: 9.5
+        },
+        margin: { left: margin, right: margin }
+    });
+
+    // Signature Block
+    const finalY = doc.lastAutoTable.finalY + 22;
+    doc.setDrawColor(120, 120, 120);
+    doc.setLineWidth(0.4);
+
+    // Left Signature
+    doc.line(margin, finalY, margin + 45, finalY);
+    doc.setFontSize(8.5);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Prepared By', margin, finalY + 4);
+
+    // Right Signature
+    doc.line(W - margin - 45, finalY, W - margin, finalY);
+    doc.text('Authorised Signatory', W - margin - 45, finalY + 4);
+
+    // Footer Watermark
+    doc.setFontSize(7);
+    doc.setTextColor(170, 170, 170);
+    doc.text('This is a computer-generated invoice document.', W / 2, 287, { align: 'center' });
+
+    const safeDateStr = new Date(examDate).toISOString().slice(0, 10);
+    doc.save(`Invoice_${safeDateStr}.pdf`);
     toast('success', 'PDF downloaded successfully!');
 }
 
@@ -1021,22 +1139,8 @@ document.getElementById('downloadInvoicePDFBtn').addEventListener('click', async
         const res = await apiFetch(`${API.invoices}/${currentViewInvoiceId}`);
         if (!res.success) return;
         const inv = res.data;
-        // Re-use the PDF generator with fixed amounts
-        const staffForPDF = inv.entries.map((e, i) => ({
-            _id: `view-${i}`, name: e.name, role: e.role,
-            phone: e.phone, bankAccount: e.accountNumber
-        }));
-        // Override amount inputs temporarily
-        staffForPDF.forEach((s, i) => {
-            const el = document.getElementById(`amt-${s._id}`);
-            if (!el) {
-                const tmp = document.createElement('input');
-                tmp.id = `amt-${s._id}`; tmp.type = 'number'; tmp.value = inv.entries[i].amount;
-                tmp.style.display = 'none';
-                document.body.appendChild(tmp);
-            }
-        });
-        generateInvoicePDF(inv.examDate, staffForPDF, inv);
+        // Pass entries directly — no DOM manipulation needed
+        generateInvoicePDF(inv.examDate, inv.entries, true, inv.invoiceNumber);
     } catch (err) { toast('error', 'PDF generation failed.'); }
 });
 

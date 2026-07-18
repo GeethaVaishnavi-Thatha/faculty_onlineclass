@@ -7,6 +7,7 @@ const connectDB = require('./db');
 const facultyRoutes      = require('./routes/facultyRoutes');
 const invoiceRoutes      = require('./routes/invoiceRoutes');
 const invigilationRoutes = require('./routes/invigilationRoutes');
+const dutyChartRoutes    = require('./routes/dutyChartRoutes');
 
 dotenv.config();
 const app = express();
@@ -59,6 +60,7 @@ app.use('/api/faculty',      facultyRoutes);
 // ── Admin Dashboard routes ────────────────────────────────────────────────
 app.use('/api/invoices',     invoiceRoutes);
 app.use('/api/invigilation', invigilationRoutes);
+app.use('/api/duty',         dutyChartRoutes);
 
 app.use((err, req, res, next) => {
     return res.status(400).json({ success: false, message: err.message });

@@ -1284,98 +1284,28 @@ select.form-control option { background: var(--white); }
       <div class="page-header">
         <div>
           <div class="page-title"><i class="fa-solid fa-table-list" style="color:var(--purple-600);margin-right:8px"></i>Invigilation Chart</div>
-          <div class="page-subtitle">Intelligent exam duty allocation system</div>
+          <div class="page-subtitle">Assign shifts and track duty amounts for exam staff</div>
         </div>
         <div class="page-actions">
-          <button class="btn btn-outline btn-sm" id="invigClearBtn"><i class="fa-solid fa-xmark"></i> Clear</button>
-          <button class="btn btn-amber btn-sm" id="invigAutoBtn"><i class="fa-solid fa-wand-magic-sparkles"></i> Auto Allocate</button>
-          <button class="btn btn-success btn-sm" id="invigSaveBtn"><i class="fa-solid fa-floppy-disk"></i> Save Chart</button>
-          <button class="btn btn-primary btn-sm" id="invigExcelBtn"><i class="fa-solid fa-file-excel"></i> Export Excel</button>
           <button class="btn btn-info btn-sm" id="invigPrintBtn"><i class="fa-solid fa-print"></i> Print</button>
         </div>
       </div>
 
-      <!-- Summary Cards -->
-      <div class="invig-summary-grid">
-        <div class="invig-summary-card">
-          <div class="sv" id="inv-total">0</div><div class="sl">Total Staff</div>
-        </div>
-        <div class="invig-summary-card" style="border-color:#DDD6FE">
-          <div class="sv" id="inv-assigned" style="color:var(--purple-700)">0</div><div class="sl">Assigned</div>
-        </div>
-        <div class="invig-summary-card" style="border-color:#D1FAE5">
-          <div class="sv" id="inv-available" style="color:var(--green-600)">0</div><div class="sl">Available</div>
-        </div>
-        <div class="invig-summary-card" style="border-color:#FEE2E2">
-          <div class="sv" id="inv-conflicts" style="color:var(--red-600)">0</div><div class="sl">Conflicts</div>
-        </div>
-        <div class="invig-summary-card" style="border-color:#FEF3C7">
-          <div class="sv" id="inv-remaining" style="color:var(--amber-600)">0</div><div class="sl">Remaining</div>
-        </div>
-      </div>
-
-      <!-- Filters -->
-      <div class="card" style="margin-bottom:16px">
-        <div class="card-body" style="padding:16px 20px">
-          <div class="invig-filter-grid">
-            <div class="form-group">
-              <label class="form-label">Exam Date <span class="req">*</span></label>
-              <input type="date" class="form-control" id="inv-date">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Department</label>
-              <input type="text" class="form-control" id="inv-dept" placeholder="All Departments">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Building</label>
-              <input type="text" class="form-control" id="inv-building" placeholder="e.g. Block A">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Floor</label>
-              <input type="text" class="form-control" id="inv-floor" placeholder="e.g. Ground Floor">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Halls (comma-separated)</label>
-              <input type="text" class="form-control" id="inv-halls" placeholder="Hall 1, Hall 2, Hall 3">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Faculty Role Filter</label>
-              <select class="form-control" id="inv-role-filter">
-                <option value="All">All Qualifications</option>
-                <option value="B.Tech">B.Tech</option>
-                <option value="M.Tech">M.Tech</option>
-                <option value="Ph.D.">Ph.D.</option>
-                <option value="MCA">MCA</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Staff per Hall</label>
-              <input type="number" class="form-control" id="inv-per-hall" value="2" min="1" max="10">
-            </div>
-            <div class="form-group" style="align-self:flex-end">
-              <button class="btn btn-primary" style="width:100%" id="invigLoadBtn">
-                <i class="fa-solid fa-magnifying-glass"></i> Load Staff
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Allocation Table -->
+      <!-- Staff Table -->
       <div class="card">
         <div class="card-header">
-          <div class="card-title"><i class="fa-solid fa-clipboard-list"></i> Staff Allocation Table</div>
+          <div class="card-title"><i class="fa-solid fa-clipboard-list"></i> Faculty Duty Chart</div>
           <div class="filter-bar">
             <div class="search-box">
               <i class="fa-solid fa-magnifying-glass"></i>
-              <input type="text" id="invigSearch" placeholder="Search staff…">
+              <input type="text" id="invigSearch" placeholder="Search by name…">
             </div>
-            <select class="filter-select" id="invigStatusFilter">
-              <option value="All">All Status</option>
-              <option value="Available">Available</option>
-              <option value="Assigned">Assigned</option>
-              <option value="Unavailable">Unavailable</option>
-              <option value="Conflict">Conflict</option>
+            <select class="filter-select" id="invigRoleFilter">
+              <option value="All">All Qualifications</option>
+              <option value="B.Tech">B.Tech</option>
+              <option value="M.Tech">M.Tech</option>
+              <option value="Ph.D.">Ph.D.</option>
+              <option value="MCA">MCA</option>
             </select>
           </div>
         </div>
@@ -1383,22 +1313,20 @@ select.form-control option { background: var(--white); }
           <table class="data-table" id="invigTable">
             <thead>
               <tr>
-                <th>#</th>
-                <th>Faculty Name</th>
-                <th>Department</th>
+                <th style="width:44px">#</th>
+                <th>Name</th>
                 <th>Role</th>
-                <th>Experience</th>
-                <th>Availability</th>
-                <th>Assigned Hall</th>
-                <th>Assigned Shift</th>
-                <th>Status</th>
+                <th>Phone No</th>
+                <th>Account Number</th>
+                <th>Shift</th>
+                <th>Amount (₹)</th>
               </tr>
             </thead>
             <tbody id="invigTableBody"></tbody>
           </table>
           <div id="invigEmpty" class="empty-state" style="display:none">
             <i class="fa-solid fa-calendar-xmark"></i>
-            <p>Load staff using the filters above to begin allocation.</p>
+            <p>No faculty records found.</p>
           </div>
         </div>
         <div class="pagination" id="invigPagination"></div>

@@ -607,281 +607,142 @@ document.getElementById('confirmDeleteBtn').addEventListener('click', async () =
 // ═══════════════════════════════════════════════════════════════════
 // PAGE 4: INVIGILATION CHART
 // ═══════════════════════════════════════════════════════════════════
-let invigAllStaff       = [];  // all loaded staff (from API)
-let invigAllocations    = {};  // staffId -> { hall, shift }
-let invigFilteredStaff  = [];  // after search/filter
+let invigAllStaff      = [];  // all staff from API
+let invigChartData     = {};  // _id -> { shift, amount }
+let invigFilteredStaff = [];
 let invigPage = 1, invigLimit = 10;
+let invigSearch = '', invigRole = 'All';
 
 function initInvigilation() {
-    // Set today as default date
-    const today = new Date().toISOString().split('T')[0];
-    if (!document.getElementById('inv-date').value) document.getElementById('inv-date').value = today;
-    updateInvigSummary();
+    loadInvigChart();
 }
 
-// Load staff for allocation
-document.getElementById('invigLoadBtn').addEventListener('click', loadInvigStaff);
-
-async function loadInvigStaff() {
-    const role = document.getElementById('inv-role-filter').value;
-    const dept = document.getElementById('inv-dept').value.trim();
-
-    const params = new URLSearchParams({ status: 'Active' });
-    if (role && role !== 'All') params.append('role', role);
-    if (dept)                   params.append('department', dept);
-
+async function loadInvigChart() {
+    const tbody = document.getElementById('invigTableBody');
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px"><div class="spinner" style="margin:0 auto"></div></td></tr>`;
     document.getElementById('invigEmpty').style.display = 'none';
-    document.getElementById('invigTableBody').innerHTML = `<tr><td colspan="9" style="text-align:center;padding:30px"><div class="spinner" style="margin:0 auto"></div></td></tr>`;
 
     try {
-        const res = await apiFetch(`${API.invigilation}/staff?${params}`);
+        const res = await apiFetch(API.staff);
         if (!res.success) { toast('error', res.message); return; }
-
-        invigAllStaff = res.data;
-        invigAllocations = {};
-        invigFilteredStaff = [...invigAllStaff];
+        invigAllStaff = res.data || [];
+        // Initialise chart data for any new staff
+        invigAllStaff.forEach(s => {
+            if (!invigChartData[s._id]) {
+                invigChartData[s._id] = { shift: '', amount: 0 };
+            }
+        });
         invigPage = 1;
-        renderInvigTable();
-        updateInvigSummary();
-        toast('info', `Loaded ${invigAllStaff.length} staff member(s).`);
-    } catch (err) { toast('error', 'Failed to load staff: ' + err.message); }
+        renderInvigChart();
+    } catch (err) { toast('error', 'Failed to load faculty: ' + err.message); }
 }
 
-function renderInvigTable() {
-    const search     = document.getElementById('invigSearch').value.toLowerCase();
-    const statusFlt  = document.getElementById('invigStatusFilter').value;
+function renderInvigChart() {
+    const search = invigSearch.toLowerCase();
+    const role   = invigRole;
 
     invigFilteredStaff = invigAllStaff.filter(s => {
-        const alloc  = invigAllocations[s.staffId];
-        const status = alloc ? (alloc.conflict ? 'Conflict' : 'Assigned') : s.availability;
-
         const matchSearch = !search ||
-            s.name.toLowerCase().includes(search) ||
-            s.role.toLowerCase().includes(search) ||
-            (s.department || '').toLowerCase().includes(search);
-
-        const matchStatus = statusFlt === 'All' || status === statusFlt;
-        return matchSearch && matchStatus;
+            (s.facultyName || '').toLowerCase().includes(search) ||
+            (s.mobileNumber || '').includes(search);
+        const matchRole = role === 'All' || s.qualification === role;
+        return matchSearch && matchRole;
     });
 
     const tbody = document.getElementById('invigTableBody');
     const empty = document.getElementById('invigEmpty');
     const total = invigFilteredStaff.length;
-    const start = (invigPage - 1) * invigLimit;
-    const slice = invigFilteredStaff.slice(start, start + invigLimit);
 
     if (!total) {
-        tbody.innerHTML = ''; empty.style.display = 'block'; return;
+        tbody.innerHTML = '';
+        empty.style.display = 'block';
+        document.getElementById('invigPagination').innerHTML = '';
+        return;
     }
     empty.style.display = 'none';
 
+    const start = (invigPage - 1) * invigLimit;
+    const slice = invigFilteredStaff.slice(start, start + invigLimit);
+
+    const SHIFTS = ['Morning (8AM–12PM)', 'Afternoon (12PM–4PM)', 'Evening (4PM–8PM)'];
+
     tbody.innerHTML = slice.map((s, i) => {
-        const alloc = invigAllocations[s.staffId];
-        const status = alloc ? (alloc.conflict ? 'Conflict' : 'Assigned') : s.availability;
-
-        const badgeClass = {
-            Available:   'invig-badge-available',
-            Assigned:    'invig-badge-assigned',
-            Unavailable: 'invig-badge-unavail',
-            Conflict:    'invig-badge-conflict',
-            'On Leave':  'invig-badge-onleave'
-        }[status] || 'invig-badge-unavail';
-
-        const rowClass = {
-            Assigned:  'invig-row-assigned',
-            Conflict:  'invig-row-conflict',
-            Unavailable: 'invig-row-unavail'
-        }[status] || '';
-
-        const hallSel  = generateHallSelect(s.staffId, alloc ? alloc.hall  : '');
-        const shiftSel = generateShiftSelect(s.staffId, alloc ? alloc.shift : '');
+        const d = invigChartData[s._id] || { shift: '', amount: 0 };
+        const shiftOpts = `<option value="">— Select Shift —</option>` +
+            SHIFTS.map(sh => `<option value="${sh}" ${d.shift === sh ? 'selected' : ''}>${sh}</option>`).join('');
 
         return `
-        <tr class="${rowClass}">
+        <tr>
             <td style="color:var(--text-muted)">${start + i + 1}</td>
-            <td><strong>${s.name}</strong></td>
-            <td>${s.department || '—'}</td>
-            <td><span class="badge badge-purple">${s.role}</span></td>
-            <td>${s.experience || 0} yr</td>
-            <td><span class="${badgeClass}">${s.availability}</span></td>
-            <td>${hallSel}</td>
-            <td>${shiftSel}</td>
-            <td><span class="${badgeClass}">${status}</span></td>
+            <td><strong>${s.facultyName}</strong></td>
+            <td><span class="badge badge-purple">${s.qualification || '—'}</span></td>
+            <td>${s.mobileNumber || '—'}</td>
+            <td style="font-size:.8rem;color:var(--text-muted)">${s.bankAccount || '—'}</td>
+            <td>
+                <select class="filter-select" style="padding:5px 8px;font-size:.78rem;min-width:160px"
+                    onchange="invigSetShift('${s._id}', this.value)">${shiftOpts}</select>
+            </td>
+            <td>
+                <div style="display:flex;flex-direction:column;gap:4px;min-width:140px">
+                    <span style="font-weight:700;font-size:.92rem;color:var(--purple-700)" id="invig-amt-${s._id}">₹${d.amount.toLocaleString()}</span>
+                    <div style="display:flex;gap:4px">
+                        <input type="number" id="invig-add-${s._id}" min="0" placeholder="Add ₹"
+                            style="width:80px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:.78rem;outline:none"
+                            onkeydown="if(event.key==='Enter'){invigAddAmount('${s._id}')}"
+                        >
+                        <button onclick="invigAddAmount('${s._id}')"
+                            style="padding:4px 10px;background:var(--purple-600);color:#fff;border:none;border-radius:6px;font-size:.75rem;font-weight:600;cursor:pointer;white-space:nowrap">
+                            Add
+                        </button>
+                    </div>
+                </div>
+            </td>
         </tr>`;
     }).join('');
 
     renderPagination('invigPagination', {
         total, page: invigPage, limit: invigLimit,
         totalPages: Math.ceil(total / invigLimit)
-    }, (p) => { invigPage = p; renderInvigTable(); });
+    }, (p) => { invigPage = p; renderInvigChart(); });
 }
 
-function generateHallSelect(staffId, currentVal) {
-    const hallStr = document.getElementById('inv-halls').value;
-    const halls = hallStr ? hallStr.split(',').map(h => h.trim()).filter(Boolean) : [];
-    if (!halls.length) return currentVal || '—';
-
-    const opts = `<option value="">— Select Hall —</option>` +
-        halls.map(h => `<option value="${h}" ${currentVal === h ? 'selected' : ''}>${h}</option>`).join('');
-    return `<select class="filter-select" style="padding:4px 8px;font-size:.78rem" 
-                onchange="updateAllocation('${staffId}','hall',this.value)">${opts}</select>`;
+function invigSetShift(id, value) {
+    if (!invigChartData[id]) invigChartData[id] = { shift: '', amount: 0 };
+    invigChartData[id].shift = value;
 }
 
-function generateShiftSelect(staffId, currentVal) {
-    const shifts = ['Shift 1 (9AM–12PM)', 'Shift 2 (12PM–3PM)', 'Shift 3 (3PM–6PM)'];
-    const opts = `<option value="">— Select Shift —</option>` +
-        shifts.map(sh => `<option value="${sh}" ${currentVal === sh ? 'selected' : ''}>${sh}</option>`).join('');
-    return `<select class="filter-select" style="padding:4px 8px;font-size:.78rem"
-                onchange="updateAllocation('${staffId}','shift',this.value)">${opts}</select>`;
-}
-
-function updateAllocation(staffId, field, value) {
-    if (!invigAllocations[staffId]) invigAllocations[staffId] = {};
-    invigAllocations[staffId][field] = value;
-
-    // Conflict detection: same hall + same shift assigned to multiple staff
-    const seen = {};
-    Object.entries(invigAllocations).forEach(([sid, alloc]) => {
-        if (alloc.hall && alloc.shift) {
-            const key = `${alloc.hall}||${alloc.shift}`;
-            if (seen[key] && seen[key] !== sid) {
-                invigAllocations[sid].conflict   = true;
-                invigAllocations[seen[key]].conflict = true;
-            } else {
-                seen[key] = sid;
-                if (invigAllocations[sid]) invigAllocations[sid].conflict = false;
-            }
-        }
-    });
-
-    updateInvigSummary();
-    renderInvigTable();
-}
-
-function updateInvigSummary() {
-    const total     = invigAllStaff.length;
-    const assigned  = Object.values(invigAllocations).filter(a => a.hall || a.shift).length;
-    const conflicts = Object.values(invigAllocations).filter(a => a.conflict).length;
-    const avail     = invigAllStaff.filter(s => s.availability === 'Available').length;
-    const remaining = total - assigned;
-
-    document.getElementById('inv-total').textContent     = total;
-    document.getElementById('inv-assigned').textContent  = assigned;
-    document.getElementById('inv-available').textContent = avail;
-    document.getElementById('inv-conflicts').textContent = conflicts;
-    document.getElementById('inv-remaining').textContent = remaining;
-}
-
-// Search/filter
-document.getElementById('invigSearch').addEventListener('input', () => { invigPage = 1; renderInvigTable(); });
-document.getElementById('invigStatusFilter').addEventListener('change', () => { invigPage = 1; renderInvigTable(); });
-
-// ─── AUTO ALLOCATE ────────────────────────────────────────────────
-document.getElementById('invigAutoBtn').addEventListener('click', async () => {
-    if (!invigAllStaff.length) {
-        toast('warning', 'Please load staff first using the Load Staff button.');
+function invigAddAmount(id) {
+    const input = document.getElementById(`invig-add-${id}`);
+    const val = parseFloat(input.value);
+    if (isNaN(val) || val <= 0) {
+        toast('warning', 'Enter a valid positive amount.');
         return;
     }
-    const hallStr = document.getElementById('inv-halls').value;
-    const halls   = hallStr ? hallStr.split(',').map(h => h.trim()).filter(Boolean) : [];
-    if (!halls.length) {
-        toast('warning', 'Please enter at least one hall in the Halls field.');
-        return;
-    }
+    if (!invigChartData[id]) invigChartData[id] = { shift: '', amount: 0 };
+    invigChartData[id].amount += val;
+    input.value = '';
 
-    const btn = document.getElementById('invigAutoBtn');
-    btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Allocating…';
+    // Update the displayed total without full re-render
+    const amtEl = document.getElementById(`invig-amt-${id}`);
+    if (amtEl) amtEl.textContent = `₹${invigChartData[id].amount.toLocaleString()}`;
+    toast('success', `₹${val.toLocaleString()} added successfully.`);
+}
 
-    try {
-        const payload = {
-            halls,
-            shifts:      ['Shift 1 (9AM–12PM)', 'Shift 2 (12PM–3PM)', 'Shift 3 (3PM–6PM)'],
-            role:        document.getElementById('inv-role-filter').value,
-            department:  document.getElementById('inv-dept').value.trim(),
-            building:    document.getElementById('inv-building').value.trim(),
-            floor:       document.getElementById('inv-floor').value.trim(),
-            staffPerHall: parseInt(document.getElementById('inv-per-hall').value) || 2
-        };
-        const res = await apiFetch(`${API.invigilation}/auto-allocate`, { method: 'POST', body: JSON.stringify(payload) });
-
-        if (res.success) {
-            // Apply allocations to local state
-            invigAllocations = {};
-            res.allocations.forEach(a => {
-                invigAllocations[a.staffId] = { hall: a.hall, shift: a.shift, conflict: false };
-            });
-            renderInvigTable();
-            updateInvigSummary();
-            toast('success', res.message);
-        } else {
-            toast('warning', res.message);
-        }
-    } catch (err) { toast('error', err.message || 'Auto-allocation failed.'); }
-    finally { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Auto Allocate'; }
+// Search & filter listeners
+let invigSearchTimer;
+document.getElementById('invigSearch').addEventListener('input', e => {
+    clearTimeout(invigSearchTimer);
+    invigSearchTimer = setTimeout(() => { invigSearch = e.target.value.trim(); invigPage = 1; renderInvigChart(); }, 300);
 });
+document.getElementById('invigRoleFilter').addEventListener('change', e => { invigRole = e.target.value; invigPage = 1; renderInvigChart(); });
 
-// ─── CLEAR ALLOCATION ─────────────────────────────────────────────
-document.getElementById('invigClearBtn').addEventListener('click', () => {
-    invigAllocations = {};
-    renderInvigTable();
-    updateInvigSummary();
-    toast('info', 'Allocations cleared.');
-});
+// Print
+document.getElementById('invigPrintBtn').addEventListener('click', () => { window.print(); });
 
-// ─── SAVE CHART ───────────────────────────────────────────────────
-document.getElementById('invigSaveBtn').addEventListener('click', async () => {
-    const examDate = document.getElementById('inv-date').value;
-    if (!examDate) { toast('warning', 'Please select an exam date.'); return; }
 
-    const allocations = invigAllStaff
-        .filter(s => invigAllocations[s.staffId] && (invigAllocations[s.staffId].hall || invigAllocations[s.staffId].shift))
-        .map(s => ({
-            staffId:    s.staffId,
-            name:       s.name,
-            role:       s.role,
-            department: s.department || '',
-            hall:       invigAllocations[s.staffId].hall  || '',
-            shift:      invigAllocations[s.staffId].shift || '',
-            building:   document.getElementById('inv-building').value.trim(),
-            floor:      document.getElementById('inv-floor').value.trim(),
-            status:     invigAllocations[s.staffId].conflict ? 'Conflict' : 'Assigned'
-        }));
 
-    if (!allocations.length) { toast('warning', 'No allocations to save.'); return; }
 
-    const btn = document.getElementById('invigSaveBtn');
-    btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving…';
 
-    try {
-        const payload = {
-            examDate,
-            department: document.getElementById('inv-dept').value.trim(),
-            building:   document.getElementById('inv-building').value.trim(),
-            floor:      document.getElementById('inv-floor').value.trim(),
-            allocations
-        };
-        const res = await apiFetch(API.invigilation, { method: 'POST', body: JSON.stringify(payload) });
-        if (res.success) toast('success', res.message);
-        else toast('error', res.message);
-    } catch (err) { toast('error', err.message || 'Save failed.'); }
-    finally { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save Chart'; }
-});
-
-// ─── EXPORT CHART EXCEL ───────────────────────────────────────────
-document.getElementById('invigExcelBtn').addEventListener('click', () => {
-    if (!invigAllStaff.length) { toast('warning', 'No data to export.'); return; }
-    toast('info', 'Preparing Excel…');
-    // Build data for client-side export via jsPDF autotable or send to server
-    const allocations = invigAllStaff.filter(s => invigAllocations[s.staffId]);
-    if (!allocations.length) { toast('warning', 'No allocations to export.'); return; }
-    // Trigger server download if we have a saved chart; otherwise show message
-    toast('info', 'Please save the chart first, then download from Registered Charts.');
-});
-
-// ─── PRINT CHART ──────────────────────────────────────────────────
-document.getElementById('invigPrintBtn').addEventListener('click', () => {
-    window.print();
-});
 
 // ═══════════════════════════════════════════════════════════════════
 // PAGE 5: STATEMENT / INVOICE

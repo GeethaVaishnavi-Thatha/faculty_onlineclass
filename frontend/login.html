@@ -1,56 +1,41 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Login — Faculty Hub</title>
+    <meta name="description" content="Admin login portal for Faculty Registration and Exam Staff Management System">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        /* ── DARK THEME (default) ── */
-        :root, [data-theme="dark"] {
-            --navy:    #0B1120;
-            --slate:   #141C2E;
-            --panel:   #1A2440;
-            --border:  rgba(255,255,255,0.07);
-            --rule:    rgba(255,255,255,0.05);
-            --ink:     #4C5FD5;
-            --ink-lt:  #7B8EE8;
-            --stamp:   #E8A020;
-            --text:    #D8DCEB;
-            --muted:   #6B7694;
-            --dim:     #3A4460;
-            --dot-clr: rgba(76,95,213,0.12);
-            --glow:    rgba(76,95,213,0.14);
-            --heading: #EEF0F4;
-            --shadow:  rgba(0,0,0,0.6);
+        :root {
+            --indigo:       #4F46E5;
+            --indigo-dark:  #3730A3;
+            --indigo-light: #6366F1;
+            --indigo-50:    #EEF2FF;
+            --indigo-100:   #E0E7FF;
+            --gold:         #B45309;
+            --gold-bg:      #FEF3C7;
+            --text:         #1E1B4B;
+            --text-sub:     #4B5563;
+            --muted:        #9CA3AF;
+            --border:       #E5E7EB;
+            --bg:           #F8F7FF;
+            --white:        #FFFFFF;
+            --shadow:       0 20px 60px rgba(79,70,229,.12), 0 4px 16px rgba(0,0,0,.06);
+            --shadow-sm:    0 2px 8px rgba(0,0,0,.06);
+            --radius:       16px;
+            --radius-sm:    10px;
         }
 
-        /* ── LIGHT THEME ── */
-        [data-theme="light"] {
-            --navy:    #F0F3FA;
-            --slate:   #FFFFFF;
-            --panel:   #E8EBF5;
-            --border:  rgba(0,0,0,0.09);
-            --rule:    rgba(0,0,0,0.05);
-            --ink:     #4C5FD5;
-            --ink-lt:  #4C5FD5;
-            --stamp:   #C07A00;
-            --text:    #1E2A4A;
-            --muted:   #5A6480;
-            --dim:     #94A0C0;
-            --dot-clr: rgba(76,95,213,0.08);
-            --glow:    rgba(76,95,213,0.06);
-            --heading: #1A2240;
-            --shadow:  rgba(0,0,0,0.12);
-        }
+        html { scroll-behavior: smooth; }
 
         body {
             min-height: 100vh;
-            background: var(--navy);
+            background: var(--bg);
             font-family: 'Inter', sans-serif;
             color: var(--text);
             display: flex;
@@ -59,207 +44,293 @@
             justify-content: center;
             position: relative;
             overflow: hidden;
-            transition: background 0.3s, color 0.3s;
         }
 
+        /* Decorative background */
         body::before {
             content: '';
-            position: fixed; inset: 0;
-            background-image: radial-gradient(circle, var(--dot-clr) 1px, transparent 1px);
-            background-size: 28px 28px;
-            pointer-events: none; z-index: 0;
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 700px 500px at 10% 10%, rgba(79,70,229,.07) 0%, transparent 60%),
+                radial-gradient(ellipse 500px 400px at 90% 90%, rgba(99,102,241,.06) 0%, transparent 60%);
+            pointer-events: none;
+            z-index: 0;
         }
+
+        /* Dot grid pattern */
         body::after {
             content: '';
             position: fixed;
-            width: 520px; height: 520px;
-            background: radial-gradient(ellipse, var(--glow) 0%, transparent 70%);
-            top: -120px; left: -80px;
-            pointer-events: none; z-index: 0;
+            inset: 0;
+            background-image: radial-gradient(circle, rgba(79,70,229,.08) 1px, transparent 1px);
+            background-size: 32px 32px;
+            pointer-events: none;
+            z-index: 0;
         }
-
-        /* Theme toggle */
-        .theme-btn {
-            position: fixed;
-            top: 16px; right: 16px;
-            z-index: 100;
-            width: 38px; height: 38px;
-            border-radius: 8px;
-            background: var(--panel);
-            border: 1px solid var(--border);
-            color: var(--muted);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 0.85rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .theme-btn:hover { color: var(--ink-lt); border-color: var(--ink); }
 
         .login-wrap {
-            position: relative; z-index: 10;
-            width: 100%; max-width: 420px;
-            padding: 16px;
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 440px;
+            padding: 20px 16px;
         }
 
-        .classif-bar {
-            background: var(--stamp);
-            color: #0B1120;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.65rem; font-weight: 600;
-            letter-spacing: 2px; text-align: center;
-            padding: 6px 0;
-            border-radius: 8px 8px 0 0;
+        /* College name badge at top */
+        .college-badge {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .college-badge span {
+            display: inline-block;
+            font-size: .7rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--indigo);
+            background: var(--indigo-100);
+            border: 1px solid rgba(79,70,229,.2);
+            border-radius: 100px;
+            padding: 6px 16px;
+        }
+
+        /* Card */
+        .login-card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 40px 36px 32px;
+            box-shadow: var(--shadow);
+        }
+
+        /* Header strip */
+        .access-strip {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: linear-gradient(135deg, var(--indigo) 0%, var(--indigo-light) 100%);
+            border-radius: 10px;
+            padding: 12px 16px;
+            margin-bottom: 28px;
+        }
+        .access-strip i {
+            color: rgba(255,255,255,.85);
+            font-size: .95rem;
+        }
+        .access-strip span {
+            color: #fff;
+            font-size: .75rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
             text-transform: uppercase;
         }
 
-        .glass-card {
-            background: var(--slate);
-            border: 1px solid var(--border);
-            border-top: none;
-            border-radius: 0 0 16px 16px;
-            padding: 36px 36px 32px;
-            box-shadow: 0 24px 64px var(--shadow);
-            background-image: repeating-linear-gradient(
-                to bottom, transparent, transparent 39px,
-                var(--rule) 39px, var(--rule) 40px
-            );
-            transition: background 0.3s, box-shadow 0.3s;
+        /* Brand row */
+        .brand-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 28px;
+        }
+        .brand-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--indigo) 0%, var(--indigo-light) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            color: #fff;
+            flex-shrink: 0;
+            box-shadow: 0 6px 20px rgba(79,70,229,.3);
+        }
+        .brand-text h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.6rem;
+            color: var(--text);
+            line-height: 1;
+            font-weight: 700;
+        }
+        .brand-text p {
+            font-size: .72rem;
+            color: var(--indigo);
+            font-weight: 600;
+            letter-spacing: .5px;
+            margin-top: 4px;
         }
 
-        /* Already-logged-in banner */
+        .divider {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 0 0 24px;
+        }
+
+        /* Already-in banner */
         .already-in {
-            background: rgba(76,95,213,0.1);
-            border: 1px solid rgba(76,95,213,0.25);
-            border-radius: 8px;
+            background: var(--indigo-50);
+            border: 1px solid rgba(79,70,229,.2);
+            border-radius: 10px;
             padding: 12px 16px;
             display: none;
             margin-bottom: 20px;
-            font-size: 0.84rem;
-            color: var(--ink-lt);
+            font-size: .83rem;
+            color: var(--indigo-dark);
+            line-height: 1.4;
         }
         .already-in a {
-            color: var(--stamp);
+            color: var(--indigo);
             font-weight: 700;
             text-decoration: none;
         }
         .already-in a:hover { text-decoration: underline; }
 
-        .brand-row { display: flex; align-items: center; gap: 14px; margin-bottom: 6px; }
-        .brand-icon {
-            width: 52px; height: 52px; border-radius: 10px;
-            background: var(--panel);
-            border: 1px solid rgba(76,95,213,0.4);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.3rem; color: var(--ink-lt); flex-shrink: 0;
-        }
-        .brand-text h1 {
-            font-family: 'DM Serif Display', serif;
-            font-size: 1.7rem; color: var(--heading);
-            line-height: 1; font-weight: 400;
-        }
-        .brand-text p {
-            font-size: 0.72rem; color: var(--stamp);
-            font-family: 'JetBrains Mono', monospace;
-            letter-spacing: 1.5px; text-transform: uppercase;
-            margin-top: 3px;
-        }
-
-        .divider { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
-
+        /* Field */
         .field-label {
-            display: block; font-size: 0.7rem; font-weight: 700;
-            letter-spacing: 1px; text-transform: uppercase;
-            color: var(--muted); margin-bottom: 7px;
+            display: block;
+            font-size: .72rem;
+            font-weight: 700;
+            letter-spacing: .8px;
+            text-transform: uppercase;
+            color: var(--text-sub);
+            margin-bottom: 7px;
         }
-        .field-wrap { position: relative; margin-bottom: 16px; }
+        .field-wrap {
+            position: relative;
+            margin-bottom: 18px;
+        }
         .field-ico {
-            position: absolute; left: 14px; top: 50%;
+            position: absolute;
+            left: 14px;
+            top: 50%;
             transform: translateY(-50%);
-            color: var(--dim); font-size: 0.82rem; pointer-events: none;
+            color: var(--muted);
+            font-size: .82rem;
+            pointer-events: none;
         }
-        .dark-input {
+        .f-input {
             width: 100%;
-            background: var(--panel);
-            border: 1px solid var(--border);
-            border-radius: 8px;
+            background: #FAFBFF;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
             color: var(--text);
             font-family: 'Inter', sans-serif;
-            font-size: 0.9rem;
+            font-size: .9rem;
             padding: 11px 14px 11px 38px;
             outline: none;
-            transition: all 0.2s;
+            transition: border-color .2s, box-shadow .2s, background .2s;
         }
-        .dark-input:focus {
-            border-color: var(--ink);
-            background: rgba(76,95,213,0.06);
-            box-shadow: 0 0 0 3px rgba(76,95,213,0.15);
+        .f-input:focus {
+            border-color: var(--indigo);
+            background: var(--white);
+            box-shadow: 0 0 0 3px rgba(79,70,229,.12);
         }
-        .dark-input::placeholder { color: var(--dim); }
+        .f-input::placeholder { color: #C4C8D4; }
 
         .toggle-pw {
-            position: absolute; right: 12px; top: 50%;
+            position: absolute;
+            right: 12px;
+            top: 50%;
             transform: translateY(-50%);
-            background: none; border: none;
-            color: var(--dim); cursor: pointer; padding: 4px;
-            font-size: 0.82rem; transition: color 0.2s;
+            background: none;
+            border: none;
+            color: var(--muted);
+            cursor: pointer;
+            padding: 4px;
+            font-size: .82rem;
+            transition: color .2s;
         }
-        .toggle-pw:hover { color: var(--ink-lt); }
+        .toggle-pw:hover { color: var(--indigo); }
 
+        /* Login button */
         .btn-login {
-            width: 100%; padding: 12px; border: none; border-radius: 8px;
-            background: var(--ink); color: #fff;
-            font-weight: 600; font-size: 0.92rem;
-            font-family: 'Inter', sans-serif; cursor: pointer;
-            transition: all 0.2s;
-            box-shadow: 0 4px 18px rgba(76,95,213,0.3);
-            letter-spacing: 0.2px; margin-top: 4px;
-            position: relative; overflow: hidden;
+            width: 100%;
+            padding: 13px;
+            border: none;
+            border-radius: var(--radius-sm);
+            background: linear-gradient(135deg, var(--indigo) 0%, var(--indigo-light) 100%);
+            color: #fff;
+            font-weight: 700;
+            font-size: .93rem;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all .2s;
+            box-shadow: 0 4px 18px rgba(79,70,229,.32);
+            letter-spacing: .2px;
+            margin-top: 6px;
+            position: relative;
+            overflow: hidden;
         }
         .btn-login::after {
-            content: ''; position: absolute; inset: 0;
-            background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 60%);
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,.1) 0%, transparent 60%);
             pointer-events: none;
         }
         .btn-login:hover:not(:disabled) {
-            background: #5C6FE5;
             transform: translateY(-1px);
-            box-shadow: 0 6px 24px rgba(76,95,213,0.4);
+            box-shadow: 0 6px 24px rgba(79,70,229,.42);
         }
-        .btn-login:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-login:disabled { opacity: .6; cursor: not-allowed; }
 
+        /* Error box */
         .error-box {
-            background: rgba(220,38,38,0.1);
-            border: 1px solid rgba(220,38,38,0.25);
-            border-radius: 8px; padding: 11px 14px;
-            color: #FCA5A5; font-size: 0.83rem;
-            display: none; margin-top: 12px;
+            background: #FEF2F2;
+            border: 1px solid #FECACA;
+            border-radius: 10px;
+            padding: 11px 14px;
+            color: #DC2626;
+            font-size: .83rem;
+            display: none;
+            margin-top: 14px;
+            font-weight: 500;
         }
 
-        .back-link { text-align: center; margin-top: 22px; font-size: 0.82rem; color: var(--muted); }
-        .back-link a { color: var(--ink-lt); text-decoration: none; font-weight: 600; transition: color 0.2s; }
-        .back-link a:hover { color: var(--heading); }
+        .back-link {
+            text-align: center;
+            margin-top: 24px;
+            font-size: .82rem;
+            color: var(--muted);
+        }
+        .back-link a {
+            color: var(--indigo);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color .2s;
+        }
+        .back-link a:hover { color: var(--indigo-dark); }
 
         .serial-no {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.62rem; color: var(--dim);
-            text-align: right; margin-top: 20px; letter-spacing: 0.5px;
+            font-size: .62rem;
+            color: #CBD5E1;
+            text-align: center;
+            margin-top: 16px;
+            letter-spacing: .5px;
+        }
+
+        @media (max-width: 480px) {
+            .login-card { padding: 28px 20px 24px; }
         }
     </style>
 </head>
 <body>
 
-    <!-- Theme toggle -->
-    <button class="theme-btn" id="themeBtn" title="Toggle light/dark mode">
-        <i class="fa-solid fa-moon" id="themeIcon"></i>
-    </button>
-
     <div class="login-wrap">
-        <div class="classif-bar">
-            <i class="fa-solid fa-shield-halved me-2"></i>RESTRICTED ACCESS · ADMIN ONLY
-        </div>
-        <div class="glass-card">
 
-            <!-- Already logged in banner (shown if session active) -->
+        <div class="college-badge">
+            <span><i class="fa-solid fa-university me-1"></i>Potti Sriramulu Chalavadi Mallikarjuna Rao College of Engineering & Technology</span>
+        </div>
+
+        <div class="login-card">
+
+            <div class="access-strip">
+                <i class="fa-solid fa-shield-halved"></i>
+                <span>Restricted Access · Admin Only</span>
+            </div>
+
+            <!-- Already logged in banner -->
             <div class="already-in" id="alreadyIn">
                 <i class="fa-solid fa-circle-check me-2"></i>
                 You are already logged in. <a href="dashboard.html">Go to Dashboard →</a>
@@ -270,7 +341,7 @@
                 <div class="brand-icon"><i class="fa-solid fa-graduation-cap"></i></div>
                 <div class="brand-text">
                     <h1>Faculty Hub</h1>
-                    <p>AI &amp; DS Department</p>
+                    <p>Admin Control Panel</p>
                 </div>
             </div>
 
@@ -280,13 +351,15 @@
                 <div class="field-wrap">
                     <label class="field-label">Username</label>
                     <span class="field-ico"><i class="fa-solid fa-user"></i></span>
-                    <input type="text" class="dark-input" id="username" placeholder="admin username" autocomplete="off" required>
+                    <input type="text" class="f-input" id="username" placeholder="Enter admin username" autocomplete="off" required>
                 </div>
                 <div class="field-wrap">
                     <label class="field-label">Password</label>
                     <span class="field-ico"><i class="fa-solid fa-lock"></i></span>
-                    <input type="password" class="dark-input" id="password" placeholder="••••••••••••" style="padding-right:40px" required>
-                    <button type="button" class="toggle-pw" id="togglePw"><i class="fa-solid fa-eye" id="pwIcon"></i></button>
+                    <input type="password" class="f-input" id="password" placeholder="••••••••••••" style="padding-right:44px" required>
+                    <button type="button" class="toggle-pw" id="togglePw">
+                        <i class="fa-solid fa-eye" id="pwIcon"></i>
+                    </button>
                 </div>
 
                 <button type="submit" class="btn-login" id="loginBtn">
@@ -310,30 +383,12 @@
     <script>
         const ADMIN = { username: 'admin', password: 'FacultyAdmin@2026' };
 
-        // ── Theme ──
-        const savedTheme = localStorage.getItem('fhTheme') || 'dark';
-        document.documentElement.setAttribute('data-theme', savedTheme);
-        updateThemeIcon(savedTheme);
-
-        document.getElementById('themeBtn').addEventListener('click', () => {
-            const current = document.documentElement.getAttribute('data-theme');
-            const next = current === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-theme', next);
-            localStorage.setItem('fhTheme', next);
-            updateThemeIcon(next);
-        });
-
-        function updateThemeIcon(theme) {
-            document.getElementById('themeIcon').className =
-                theme === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
-        }
-
-        // ── Already logged in ── show banner, do NOT auto-redirect
+        // Already logged in
         if (sessionStorage.getItem('adminAuth') === 'true') {
             document.getElementById('alreadyIn').style.display = 'block';
         }
 
-        // ── Password toggle ──
+        // Password toggle
         document.getElementById('togglePw').addEventListener('click', () => {
             const inp = document.getElementById('password');
             const ico = document.getElementById('pwIcon');
@@ -341,7 +396,7 @@
             ico.className = inp.type === 'password' ? 'fa-solid fa-eye' : 'fa-solid fa-eye-slash';
         });
 
-        // ── Login ──
+        // Login
         document.getElementById('loginForm').addEventListener('submit', (e) => {
             e.preventDefault();
             const u = document.getElementById('username').value.trim();
